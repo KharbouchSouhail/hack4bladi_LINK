@@ -60,7 +60,7 @@ export default function RoleHome() {
           <ol className="mt-4 space-y-3">
             {next.map((item, i) => (
               <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-50 text-xs font-semibold text-accent tabular-nums">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-50 text-xs font-semibold text-accent-600 tabular-nums">
                   {i + 1}
                 </span>
                 {item}

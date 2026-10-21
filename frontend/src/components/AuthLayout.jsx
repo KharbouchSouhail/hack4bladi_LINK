@@ -1,5 +1,4 @@
 import { Link as RouterLink, useLocation } from "react-router-dom";
-import background from "../assets/background.jpg";
 import { buttonClasses } from "./Button.jsx";
 import Navbar from "./Navbar.jsx";
 
@@ -25,17 +24,13 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         )}
       </Navbar>
 
-      <main
-        className="flex flex-1 items-center justify-center bg-black bg-cover bg-center px-4 py-10 sm:px-7 lg:py-16"
-        style={{ backgroundImage: `url(${background})` }}
-      >
-        {/* Dark frosted glass over the black photo; text inside inherits white. */}
-        <div className="w-full max-w-md rounded-2xl border border-white/15 bg-navy-950/45 p-6 text-white shadow-modal backdrop-blur-2xl backdrop-saturate-150 sm:p-8">
+      <main className="flex flex-1 items-center justify-center bg-white px-4 py-10 sm:px-7 lg:py-16">
+        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-gray-900 shadow-card sm:p-8">
           <h1 className="font-display text-3xl leading-tight font-bold tracking-tight sm:text-4xl">{title}</h1>
-          <p className="mt-2 text-sm leading-relaxed text-navy-200">{subtitle}</p>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">{subtitle}</p>
           <div className="mt-8">{children}</div>
           {footer && (
-            <p className="mt-6 border-t border-white/15 pt-6 text-center text-[13px] text-navy-200">{footer}</p>
+            <p className="mt-6 border-t border-gray-100 pt-6 text-center text-[13px] text-gray-600">{footer}</p>
           )}
         </div>
       </main>

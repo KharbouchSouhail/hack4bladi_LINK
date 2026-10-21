@@ -27,14 +27,14 @@ export default function Navbar({ links = [], children }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 bg-navy-900 shadow-dropdown">
+    <header className="sticky top-0 z-30 bg-brand-navy shadow-dropdown">
       <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between gap-6 px-4 sm:px-7">
         <RouterLink
           to="/"
           aria-label="Link home"
           className="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-400"
         >
-          <Logo tone="light" />
+          <Logo />
         </RouterLink>
 
         {links.length > 0 && (

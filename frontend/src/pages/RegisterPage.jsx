@@ -77,7 +77,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-accent-300 hover:underline">
+          <Link to="/login" className="font-semibold text-accent-600 hover:underline">
             Sign in
           </Link>
         </>
@@ -92,8 +92,8 @@ export default function RegisterPage() {
               return (
                 <label
                   key={value}
-                  className={`flex cursor-pointer flex-col gap-1 rounded-control border p-3 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-400 ${
-                    selected ? "border-accent-400 bg-accent-500/25" : "border-white/20 bg-white/10 hover:bg-white/20"
+                  className={`flex cursor-pointer flex-col gap-1 rounded-control border p-3 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-600 ${
+                    selected ? "border-accent bg-accent-50" : "border-gray-200 bg-white hover:bg-accent-50"
                   }`}
                 >
                   <input
@@ -104,11 +104,11 @@ export default function RegisterPage() {
                     onChange={() => setRole(value)}
                     className="sr-only"
                   />
-                  <span className="flex items-center gap-2 text-[13px] font-semibold text-white">
-                    <Icon aria-hidden="true" size={18} strokeWidth={1.8} className="text-accent-300" />
+                  <span className="flex items-center gap-2 text-[13px] font-semibold text-primary">
+                    <Icon aria-hidden="true" size={18} strokeWidth={1.8} className="text-accent-600" />
                     {label}
                   </span>
-                  <span className="text-[11px] text-navy-200">{hint}</span>
+                  <span className="text-[11px] text-gray-500">{hint}</span>
                 </label>
               );
             })}

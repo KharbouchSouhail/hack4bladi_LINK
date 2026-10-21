@@ -2,7 +2,12 @@
 
 /* Eduwave Navy design tokens — exposed as CSS variables and Tailwind utilities. */
 @theme {
-  --color-navy-950: #0b1729;
+  /* Exact colors sampled from src/assets/logo.jpeg. */
+  --color-brand-navy: #01122c;
+  --color-brand-blue: #0380fd;
+  --color-brand-cyan: #00cff6;
+
+  --color-navy-950: #01122c;
   --color-navy-900: #10213a;
   --color-navy-800: #142b4a;
   --color-navy-700: #1f416b;
@@ -26,26 +31,26 @@
   --color-gray-800: #1e293b;
   --color-gray-900: #0f172a;
 
-  --color-primary: #142b4a;
-  --color-primary-hover: #10213a;
-  --color-primary-active: #0b1729;
+  --color-primary: #01122c;
+  --color-primary-hover: #0a2246;
+  --color-primary-active: #000a1a;
   --color-primary-light: #eaf0f7;
 
-  /* Orange accent for interactive elements. 700 is the darkest shade that still reads as orange
-     and passes WCAG AA with white 13px text; 600 is the minimum for 3:1 focus outlines. */
-  --color-accent-50: #fff7ed;
-  --color-accent-100: #ffedd5;
-  --color-accent-200: #fed7aa;
-  --color-accent-300: #fdba74;
-  --color-accent-400: #fb923c;
-  --color-accent-500: #f97316;
-  --color-accent-600: #ea580c;
-  --color-accent-700: #c2410c;
-  --color-accent-800: #9a3412;
-  --color-accent-900: #7c2d12;
-  --color-accent: #c2410c;
-  --color-accent-hover: #9a3412;
-  --color-accent-active: #7c2d12;
+  /* Accent built around the logo's blue (500) and cyan (300). Logo blue with white text is only 3.8:1,
+     so blue text on white uses 600, and filled buttons put navy text on the blue→cyan gradient. */
+  --color-accent-50: #eaf4ff;
+  --color-accent-100: #d3e8ff;
+  --color-accent-200: #a9d2ff;
+  --color-accent-300: #00cff6;
+  --color-accent-400: #35a9fe;
+  --color-accent-500: #0380fd;
+  --color-accent-600: #0268d0;
+  --color-accent-700: #0255a8;
+  --color-accent-800: #01407e;
+  --color-accent-900: #012b55;
+  --color-accent: #0380fd;
+  --color-accent-hover: #0268d0;
+  --color-accent-active: #0255a8;
 
   --color-success: #15803d;
   --color-success-bg: #f0fdf4;
