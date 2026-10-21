@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* Eduwave Navy design tokens — exposed as CSS variables and Tailwind utilities. */
+@theme {
+  --color-navy-950: #0b1729;
+  --color-navy-900: #10213a;
+  --color-navy-800: #142b4a;
+  --color-navy-700: #1f416b;
+  --color-navy-600: #2d5685;
+  --color-navy-500: #5276a0;
+  --color-navy-400: #829bb9;
+  --color-navy-300: #b2c2d7;
+  --color-navy-200: #d1dce9;
+  --color-navy-100: #eaf0f7;
+  --color-navy-50: #f5f8fc;
+
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+
+  --color-primary: #142b4a;
+  --color-primary-hover: #10213a;
+  --color-primary-active: #0b1729;
+  --color-primary-light: #eaf0f7;
+
+  /* Orange accent for interactive elements. 700 is the darkest shade that still reads as orange
+     and passes WCAG AA with white 13px text; 600 is the minimum for 3:1 focus outlines. */
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+  --color-accent-800: #9a3412;
+  --color-accent-900: #7c2d12;
+  --color-accent: #c2410c;
+  --color-accent-hover: #9a3412;
+  --color-accent-active: #7c2d12;
+
+  --color-success: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-error: #b91c1c;
+  --color-error-bg: #fef2f2;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eff6ff;
+
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "Poppins", sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-control: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 4px 18px rgba(15, 23, 42, 0.05);
+  --shadow-card-hover: 0 12px 28px rgba(15, 23, 42, 0.1);
+  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.18);
+}
+
+body {
+  margin: 0;
+  background: var(--color-gray-50);
+  color: var(--color-gray-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
