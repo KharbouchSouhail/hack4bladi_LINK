@@ -1,3 +1,6 @@
+import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+
 // Extra props (e.g. `data-reveal`) go to the outer element.
 export default function Card({ title, description, action, children, className = "", bodyClassName = "p-5", as: Tag = "section", ...props }) {
   return (
@@ -40,5 +43,36 @@ export function StatTile({ label, value, hint, icon: Icon }) {
       <p className="mt-2 text-2xl font-semibold text-gray-900 tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
     </div>
+  );
+}
+
+// Headline figure for dashboards. With `to`, the whole card links to the page behind the number.
+export function KpiCard({ label, value, hint, icon: Icon, to }) {
+  const body = (
+    <>
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent-50 text-accent-600 transition-colors duration-200 ease-standard group-hover:bg-accent-100">
+          <Icon aria-hidden="true" size={16} strokeWidth={1.9} />
+        </span>
+        <p className="min-w-0 flex-1 text-xs font-medium text-gray-600">{label}</p>
+        {to && (
+          <ArrowUpRight
+            aria-hidden="true"
+            size={16}
+            className="shrink-0 text-gray-300 transition-[color,transform] duration-200 ease-standard group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-600"
+          />
+        )}
+      </div>
+      <p className="mt-3 text-[28px] leading-none font-semibold tracking-tight text-gray-900 tabular-nums">{value}</p>
+      {hint && <p className="mt-2 text-xs text-gray-500">{hint}</p>}
+    </>
+  );
+  const className = "group block rounded-lg border border-gray-200 bg-white p-4 shadow-subtle transition-[border-color,box-shadow] duration-200 ease-standard hover:border-accent-200 hover:shadow-card";
+  return to ? (
+    <Link to={to} className={`${className} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500`}>
+      {body}
+    </Link>
+  ) : (
+    <div className={className}>{body}</div>
   );
 }

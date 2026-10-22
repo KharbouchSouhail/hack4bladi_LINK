@@ -1,7 +1,9 @@
 // Company API (demo). A company only ever reads or changes its own profiles, jobs and applications,
 // and only sees the candidate data each applicant agreed to share.
+import { ANALYTICS_RANGES, countByPeriod, furthestStage, stageFunnel } from "../domain/analytics.js";
 import { APPLICATION_STATUSES } from "../domain/constants.js";
 import { buildContext } from "../domain/evidence.js";
+import { STAGE_ORDER } from "../domain/recruitment.js";
 import { applicationDetail, applicationRow, changeApplicationStatus, saveJob, saveProfile, setJobStatus } from "./shared.js";
 import * as recruitment from "./recruitment.js";
 import { findOr404, getDb, logActivity, lookups, mutate, newId, request, requireRole, validate } from "./core.js";
@@ -283,13 +285,21 @@ export function listInterviews() {
   });
 }
 
-export function getAnalytics() {
+// `range` is a key of ANALYTICS_RANGES: applications are counted when they were received in that window.
+// Open positions and upcoming interviews describe the present, so they ignore the range.
+export function getAnalytics({ range = "all" } = {}) {
   return request(() => {
     const company = currentCompany();
     const db = getDb();
     const map = lookups(db);
     const jobs = db.jobs.filter((j) => j.companyId === company.id);
-    const apps = ownApplications(db, company);
+    const now = new Date();
+    const days = ANALYTICS_RANGES[range]?.days ?? null;
+    const since = days ? new Date(now.getTime() - days * 86400000) : null;
+    const apps = ownApplications(db, company).filter((a) => !since || new Date(a.createdAt) >= since);
+    const appIds = new Set(apps.map((a) => a.id));
+    const interviewStage = STAGE_ORDER.indexOf("interview_scheduled");
+    const isActive = (a) => !["hired", "rejected"].includes(a.status);
 
     // Share of applicants (who shared their test results) that passed each required skill test.
     const skillIds = [...new Set(jobs.flatMap((j) => j.requirements.filter((r) => r.rule === "test_passed").map((r) => r.skillId)))];
@@ -297,7 +307,35 @@ export function getAnalytics() {
     const contexts = sharing.map((a) => buildContext(db, a.candidateId));
 
     return {
-      perJob: jobs.map((j) => ({ id: j.id, title: j.title, count: apps.filter((a) => a.jobId === j.id).length })),
+      range,
+      since: since?.toISOString() ?? null,
+      kpis: {
+        totalApplicants: apps.length,
+        active: apps.filter(isActive).length,
+        reachedInterview: apps.filter((a) => furthestStage(a) >= interviewStage).length,
+        hired: apps.filter((a) => a.status === "hired").length,
+        openPositions: jobs.filter((j) => j.status === "published").length,
+        draftPositions: jobs.filter((j) => j.status === "draft").length,
+        interviewsInRange: db.interviews.filter((i) => appIds.has(i.applicationId) && i.status !== "cancelled").length,
+      },
+      timeline: countByPeriod(
+        apps.map((a) => a.createdAt),
+        { since, now },
+      ),
+      funnel: stageFunnel(apps),
+      upcomingInterviews: interviewRows(db, db.interviews.filter((i) => i.companyId === company.id && i.status === "scheduled" && new Date(i.scheduledAt) >= now)).slice(0, 5),
+      perJob: jobs.map((j) => {
+        const jobApps = apps.filter((a) => a.jobId === j.id);
+        return {
+          id: j.id,
+          title: j.title,
+          status: j.status,
+          count: jobApps.length,
+          active: jobApps.filter(isActive).length,
+          interviewed: jobApps.filter((a) => furthestStage(a) >= interviewStage).length,
+          hired: jobApps.filter((a) => a.status === "hired").length,
+        };
+      }),
       perStatus: Object.keys(APPLICATION_STATUSES).map((s) => ({ status: s, count: apps.filter((a) => a.status === s).length })),
       skillValidation: skillIds.map((id) => ({
         skillId: id,

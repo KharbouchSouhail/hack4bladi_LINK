@@ -1,4 +1,5 @@
 // Administrator API (demo). Every call requires the admin role.
+import { ANALYTICS_RANGES, countByPeriod } from "../domain/analytics.js";
 import { APPLICATION_STATUSES, DIFFICULTIES, PARTNER_STATUSES } from "../domain/constants.js";
 import { buildContext, courseProgress } from "../domain/evidence.js";
 import { PLANS } from "../domain/permissions.js";
@@ -38,26 +39,53 @@ function matchScore(db, candidate) {
 
 // ---- Overview ----
 
-export function getOverview() {
-  return admin((db) => ({
-    metrics: {
-      candidates: db.candidates.length,
-      companies: db.companies.length,
-      activeCompanies: db.companies.filter((c) => c.active).length,
-      publishedProfiles: db.profiles.filter((p) => p.status === "published").length,
-      activeJobs: db.jobs.filter((j) => j.status === "published").length,
-      courses: db.courses.filter((c) => c.status === "published").length,
-      tests: db.tests.filter((t) => t.status === "published").length,
-      attempts: db.attempts.length,
-      passedAttempts: db.attempts.filter((a) => a.passed).length,
-      applications: db.applications.length,
-      upcomingInterviews: db.interviews.filter((i) => i.status === "scheduled").length,
-      placements: db.placements.filter((p) => p.status !== "cancelled").length,
-    },
-    perStatus: Object.keys(APPLICATION_STATUSES).map((s) => ({ status: s, count: db.applications.filter((a) => a.status === s).length })),
-    perPlan: Object.keys(PLANS).map((p) => ({ plan: p, count: db.candidates.filter((c) => c.plan === p).length })),
-    activity: db.activity.slice(0, 8),
-  }));
+// `range` is a key of ANALYTICS_RANGES. Counts of things that happened (applications, test attempts,
+// new listings, placements, activity) follow it; the size of the platform today (accounts, live listings) does not.
+export function getOverview({ range = "all" } = {}) {
+  return admin((db) => {
+    const now = new Date();
+    const days = ANALYTICS_RANGES[range]?.days ?? null;
+    const inRange = (iso) => !days || (iso && new Date(iso) >= new Date(now.getTime() - days * 86400000));
+    const apps = db.applications.filter((a) => inRange(a.createdAt));
+    const attempts = db.attempts.filter((a) => inRange(a.createdAt));
+    const newJobs = db.jobs.filter((j) => inRange(j.createdAt));
+    const placements = db.placements.filter((p) => p.status !== "cancelled" && inRange(p.createdAt));
+
+    // One shared start, so the three series line up on the same periods.
+    const dated = [...apps, ...attempts, ...newJobs].map((r) => r.createdAt).filter(Boolean);
+    const since = days ? new Date(now.getTime() - days * 86400000) : dated.length ? new Date(Math.min(...dated.map((d) => new Date(d).getTime()))) : null;
+    const series = (records) => countByPeriod(records.map((r) => r.createdAt).filter(Boolean), { since, now });
+
+    return {
+      range,
+      metrics: {
+        candidates: db.candidates.length,
+        companies: db.companies.length,
+        activeCompanies: db.companies.filter((c) => c.active).length,
+        publishedProfiles: db.profiles.filter((p) => p.status === "published").length,
+        activeJobs: db.jobs.filter((j) => j.status === "published").length,
+        courses: db.courses.filter((c) => c.status === "published").length,
+        tests: db.tests.filter((t) => t.status === "published").length,
+        attempts: attempts.length,
+        passedAttempts: attempts.filter((a) => a.passed).length,
+        applications: apps.length,
+        newJobs: newJobs.length,
+        upcomingInterviews: db.interviews.filter((i) => i.status === "scheduled").length,
+        placements: placements.length,
+      },
+      timeline: { applications: series(apps), attempts: series(attempts), jobs: series(newJobs) },
+      pending: {
+        awaitingReview: db.applications.filter((a) => a.status === "submitted").length,
+        upcomingInterviews: db.interviews.filter((i) => i.status === "scheduled" && new Date(i.scheduledAt) >= now).length,
+        overdueInterviews: db.interviews.filter((i) => i.status === "scheduled" && new Date(i.scheduledAt) < now).length,
+        offersOpen: db.applications.filter((a) => a.status === "offer_extended").length,
+        inactiveCompanies: db.companies.filter((c) => !c.active).length,
+      },
+      perStatus: Object.keys(APPLICATION_STATUSES).map((s) => ({ status: s, count: apps.filter((a) => a.status === s).length })),
+      perPlan: Object.keys(PLANS).map((p) => ({ plan: p, count: db.candidates.filter((c) => c.plan === p).length })),
+      activity: db.activity.filter((a) => inRange(a.at)),
+    };
+  });
 }
 
 // ---- Companies ----

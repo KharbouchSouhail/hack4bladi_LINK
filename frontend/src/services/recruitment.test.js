@@ -243,3 +243,50 @@ describe("workflow rules", () => {
     expect(migrated).toMatchObject({ interviews: [], placements: [], settings: { commission: { model: "percentage" } } });
   });
 });
+
+describe("company analytics", () => {
+  it("counts only the company's own applications received in the chosen range", async () => {
+    as("atlas");
+    const all = await companyApi.getAnalytics();
+    const total = all.kpis.totalApplicants;
+    expect(total).toBeGreaterThan(0);
+    expect(all.timeline.buckets.reduce((sum, b) => sum + b.count, 0)).toBe(total);
+    expect(all.funnel[0].count).toBe(total);
+
+    // Age one application past the 30-day window: it leaves the range but stays in "all time".
+    const ownJobIds = new Set(getDb().jobs.filter((j) => j.companyId === getDb().companies.find((c) => c.ownerUsername === "atlas").id).map((j) => j.id));
+    mutate((draft) => {
+      for (const app of draft.applications.filter((a) => ownJobIds.has(a.jobId))) app.createdAt = new Date(Date.now() - 10 * 86400000).toISOString();
+      draft.applications.find((a) => ownJobIds.has(a.jobId)).createdAt = new Date(Date.now() - 60 * 86400000).toISOString();
+    });
+    expect((await companyApi.getAnalytics({ range: "30d" })).kpis.totalApplicants).toBe(total - 1);
+    expect((await companyApi.getAnalytics({ range: "all" })).kpis.totalApplicants).toBe(total);
+
+    as("rival");
+    expect((await companyApi.getAnalytics()).kpis.totalApplicants).toBe(0);
+    as("yassine");
+    await expect(companyApi.getAnalytics()).rejects.toBeInstanceOf(AccessError);
+  });
+});
+
+describe("admin overview", () => {
+  it("filters activity figures by range, keeps platform totals, and is admin-only", async () => {
+    as("admin");
+    const all = await adminApi.getOverview();
+    expect(all.metrics.applications).toBe(getDb().applications.length);
+    expect(all.timeline.applications.buckets.reduce((sum, b) => sum + b.count, 0)).toBe(all.metrics.applications);
+    expect(all.perStatus.reduce((sum, s) => sum + s.count, 0)).toBe(all.metrics.applications);
+
+    mutate((draft) => {
+      draft.applications[0].createdAt = new Date(Date.now() - 200 * 86400000).toISOString();
+    });
+    const recent = await adminApi.getOverview({ range: "90d" });
+    expect(recent.metrics.applications).toBe(all.metrics.applications - 1);
+    expect(recent.metrics.candidates).toBe(all.metrics.candidates);
+    // The three series share their periods so they can be compared.
+    expect(recent.timeline.attempts.buckets.map((b) => b.start)).toEqual(recent.timeline.applications.buckets.map((b) => b.start));
+
+    as("atlas");
+    await expect(adminApi.getOverview()).rejects.toBeInstanceOf(AccessError);
+  });
+});

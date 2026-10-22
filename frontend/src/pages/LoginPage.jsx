@@ -133,7 +133,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => fillDemo(account)}
             title={`Fill in the ${label.toLowerCase()} demo account`}
-            className="flex h-16 w-20 flex-col items-center justify-center gap-1 rounded-control bg-white text-[11px] font-medium text-gray-700 shadow-card transition hover:-translate-y-0.5 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-accent-600"
+            className="flex h-16 w-20 flex-col items-center justify-center gap-1 rounded-control border border-gray-200 bg-white text-[11px] font-medium text-gray-700 shadow-subtle transition hover:-translate-y-0.5 hover:border-accent-200 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-accent-600"
           >
             <Icon aria-hidden="true" size={20} strokeWidth={1.8} className="text-accent-600" />
             {label}

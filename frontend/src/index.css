@@ -111,6 +111,7 @@
   /* Slower fade-up for hero copy that follows a headline. */
   --animate-reveal: reveal-up 600ms var(--ease-reveal) backwards;
   --animate-grow-x: grow-x 700ms var(--ease-reveal) backwards;
+  --animate-grow-y: grow-y 600ms var(--ease-reveal) backwards;
   --animate-indicator: indicator 260ms var(--ease-emphasized) backwards;
 
   @keyframes enter {
@@ -175,6 +176,11 @@
   @keyframes grow-x {
     from {
       transform: scaleX(0);
+    }
+  }
+  @keyframes grow-y {
+    from {
+      transform: scaleY(0);
     }
   }
   @keyframes indicator {
