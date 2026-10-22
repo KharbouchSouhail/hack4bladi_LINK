@@ -11,7 +11,13 @@ const ROLES = [
   { value: "company", label: "Company", hint: "Post profiles and offers", Icon: Building2 },
 ];
 
-const EMPTY_FORM = { name: "", username: "", email: "", password: "", confirm: "" };
+const ASIDE = {
+  heading: "Build the bridge to your next role",
+  text: "Create an account to join our community of candidates and partner companies.",
+  points: ["Candidates: assess, learn and apply", "Companies: define the profiles you hire for"],
+};
+
+const EMPTY_FORM ={ name: "", username: "", email: "", password: "", confirm: "" };
 
 function validate(role, form) {
   const errors = {};
@@ -73,7 +79,8 @@ export default function RegisterPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join as a candidate to close your skill gaps, or as a company to define the profiles you hire for."
+      subtitle="Join Link in less than a minute."
+      aside={ASIDE}
       footer={
         <>
           Already have an account?{" "}
@@ -143,26 +150,28 @@ export default function RegisterPage() {
           onChange={update("email")}
           error={errors.email}
         />
-        <TextField
-          label="Password"
-          type="password"
-          icon={Lock}
-          autoComplete="new-password"
-          placeholder="At least 8 characters"
-          value={form.password}
-          onChange={update("password")}
-          error={errors.password}
-        />
-        <TextField
-          label="Confirm password"
-          type="password"
-          icon={Lock}
-          autoComplete="new-password"
-          placeholder="Repeat your password"
-          value={form.confirm}
-          onChange={update("confirm")}
-          error={errors.confirm}
-        />
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+          <TextField
+            label="Password"
+            type="password"
+            icon={Lock}
+            autoComplete="new-password"
+            placeholder="8+ characters"
+            value={form.password}
+            onChange={update("password")}
+            error={errors.password}
+          />
+          <TextField
+            label="Confirm password"
+            type="password"
+            icon={Lock}
+            autoComplete="new-password"
+            placeholder="Repeat it"
+            value={form.confirm}
+            onChange={update("confirm")}
+            error={errors.confirm}
+          />
+        </div>
 
         <Button type="submit" className="w-full">
           Create account

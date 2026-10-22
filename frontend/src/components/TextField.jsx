@@ -27,7 +27,7 @@ export default function TextField({ label, error, icon: Icon, type = "text", cla
           type={isPassword && visible ? "text" : type}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
-          className={`h-11 w-full rounded-control border bg-white text-[13px] text-gray-900 outline-none placeholder:text-gray-400 transition-shadow focus:border-accent-600 focus:ring-[3px] focus:ring-accent-500/20 ${
+          className={`h-11 w-full rounded-control border bg-white text-[13px] text-gray-900 outline-none placeholder:text-gray-400 transition-shadow focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/20 ${
             Icon ? "pl-10" : "pl-3.5"
           } ${isPassword ? "pr-11" : "pr-3.5"} ${error ? "border-error" : "border-gray-300"}`}
           {...inputProps}

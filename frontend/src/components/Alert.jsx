@@ -1,8 +1,9 @@
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 
 const TONES = {
   error: { box: "border-error/20 bg-error-bg text-error", Icon: AlertCircle },
   success: { box: "border-success/20 bg-success-bg text-success", Icon: CheckCircle2 },
+  info: { box: "border-info/20 bg-info-bg text-info", Icon: Info },
 };
 
 export default function Alert({ tone = "error", children }) {

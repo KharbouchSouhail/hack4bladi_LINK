@@ -1,65 +1,79 @@
 @import "tailwindcss";
 
-/* Eduwave Navy design tokens — exposed as CSS variables and Tailwind utilities. */
+/* Link design tokens: periwinkle blue, blue-white and turquoise cyan.
+   Exposed as CSS variables and Tailwind utilities; components only use these names. */
 @theme {
-  /* Exact colors sampled from src/assets/logo.jpeg. */
-  --color-brand-navy: #01122c;
-  --color-brand-blue: #0380fd;
-  --color-brand-cyan: #00cff6;
+  /* Brand. The logo images keep their own colors; these drive gradients and accents. */
+  --color-brand-navy: #292d3e;
+  --color-brand-blue: #627df5;
+  --color-brand-light: #a6c0ff;
+  --color-brand-cyan: #38d5e8;
 
-  --color-navy-950: #01122c;
-  --color-navy-900: #10213a;
-  --color-navy-800: #142b4a;
-  --color-navy-700: #1f416b;
-  --color-navy-600: #2d5685;
-  --color-navy-500: #5276a0;
-  --color-navy-400: #829bb9;
-  --color-navy-300: #b2c2d7;
-  --color-navy-200: #d1dce9;
-  --color-navy-100: #eaf0f7;
-  --color-navy-50: #f5f8fc;
+  /* Neutral ink scale, tinted toward the primary text color. */
+  --color-navy-950: #1e2233;
+  --color-navy-900: #292d3e;
+  --color-navy-800: #343a52;
+  --color-navy-700: #444c69;
+  --color-navy-600: #59617f;
+  --color-navy-500: #737d91;
+  --color-navy-400: #9aa3b5;
+  --color-navy-300: #bcc4d3;
+  --color-navy-200: #d5dbe6;
+  --color-navy-100: #e8ecf4;
+  --color-navy-50: #f3f5fa;
 
-  --color-gray-25: #fcfcfd;
-  --color-gray-50: #f8fafc;
-  --color-gray-100: #f1f5f9;
-  --color-gray-200: #e2e8f0;
-  --color-gray-300: #cbd5e1;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #64748b;
-  --color-gray-600: #475569;
-  --color-gray-700: #334155;
-  --color-gray-800: #1e293b;
-  --color-gray-900: #0f172a;
+  /* 50 = page background, 200 = borders, 400 = placeholders, 500 = secondary text (palette).
+     600 is a darker step of 500 for longer secondary copy: 5.9:1 on white vs 4.1:1. */
+  --color-gray-25: #fafbfd;
+  --color-gray-50: #f3f5fa;
+  --color-gray-100: #eaeef6;
+  --color-gray-200: #e2e7f0;
+  --color-gray-300: #cdd4e1;
+  --color-gray-400: #9aa3b5;
+  --color-gray-500: #737d91;
+  --color-gray-600: #5b6478;
+  --color-gray-700: #444b5e;
+  --color-gray-800: #343949;
+  --color-gray-900: #292d3e;
 
-  --color-primary: #01122c;
-  --color-primary-hover: #0a2246;
-  --color-primary-active: #000a1a;
-  --color-primary-light: #eaf0f7;
+  --color-primary: #292d3e;
+  --color-primary-hover: #343a52;
+  --color-primary-active: #1e2233;
+  --color-primary-light: #eff2fe;
 
-  /* Accent built around the logo's blue (500) and cyan (300). Logo blue with white text is only 3.8:1,
-     so blue text on white uses 600, and filled buttons put navy text on the blue→cyan gradient. */
-  --color-accent-50: #eaf4ff;
-  --color-accent-100: #d3e8ff;
-  --color-accent-200: #a9d2ff;
-  --color-accent-300: #00cff6;
-  --color-accent-400: #35a9fe;
-  --color-accent-500: #0380fd;
-  --color-accent-600: #0268d0;
-  --color-accent-700: #0255a8;
-  --color-accent-800: #01407e;
-  --color-accent-900: #012b55;
-  --color-accent: #0380fd;
-  --color-accent-hover: #0268d0;
-  --color-accent-active: #0255a8;
+  /* Periwinkle scale. 500 = primary (fills, buttons), 600 = hover and blue text on white
+     (4.6:1, while 500 is 3.6:1), 300 = light blue. */
+  --color-accent-50: #eff2fe;
+  --color-accent-100: #e1e8fd;
+  --color-accent-200: #c7d4ff;
+  --color-accent-300: #a6c0ff;
+  --color-accent-400: #8098f8;
+  --color-accent-500: #627df5;
+  --color-accent-600: #5069e8;
+  --color-accent-700: #4255c9;
+  --color-accent-800: #3546a3;
+  --color-accent-900: #2a387f;
+  --color-accent: #627df5;
+  --color-accent-hover: #5069e8;
+  --color-accent-active: #4255c9;
+
+  /* Cyan accent, used sparingly. 700 is the text-safe step on cyan-50 (4.6:1). */
+  --color-cyan-50: #e7fafc;
+  --color-cyan-100: #c9f3f8;
+  --color-cyan-300: #7ae4f0;
+  --color-cyan-400: #38d5e8;
+  --color-cyan-500: #1fbfd3;
+  --color-cyan-600: #149fb1;
+  --color-cyan-700: #0e7c8a;
 
   --color-success: #15803d;
-  --color-success-bg: #f0fdf4;
+  --color-success-bg: #effaf3;
   --color-warning: #b45309;
-  --color-warning-bg: #fffbeb;
-  --color-error: #b91c1c;
-  --color-error-bg: #fef2f2;
-  --color-info: #1d4ed8;
-  --color-info-bg: #eff6ff;
+  --color-warning-bg: #fff8eb;
+  --color-error: #c2343f;
+  --color-error-bg: #fdf1f2;
+  --color-info: #4255c9;
+  --color-info-bg: #eef1fd;
 
   --font-display: "Playfair Display", Georgia, serif;
   --font-sans: "Poppins", sans-serif;
@@ -72,11 +86,21 @@
   --radius-xl: 20px;
   --radius-2xl: 24px;
 
-  --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-card: 0 4px 18px rgba(15, 23, 42, 0.05);
-  --shadow-card-hover: 0 12px 28px rgba(15, 23, 42, 0.1);
-  --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.12);
-  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.18);
+  /* Soft shadows tinted with the primary blue instead of grey-black. */
+  --shadow-subtle: 0 1px 3px rgba(41, 45, 62, 0.04);
+  --shadow-card: 0 6px 20px rgba(98, 125, 245, 0.08);
+  --shadow-card-hover: 0 12px 28px rgba(98, 125, 245, 0.14);
+  --shadow-dropdown: 0 12px 32px rgba(41, 45, 62, 0.12);
+  --shadow-modal: 0 24px 64px rgba(41, 45, 62, 0.18);
+}
+
+/* Gradients from the reference, for hero areas and decorative accents only. */
+@utility bg-gradient-brand {
+  background-image: linear-gradient(135deg, var(--color-brand-blue) 0%, var(--color-brand-light) 100%);
+}
+
+@utility bg-gradient-brand-cyan {
+  background-image: linear-gradient(135deg, var(--color-brand-blue) 0%, var(--color-brand-cyan) 100%);
 }
 
 body {

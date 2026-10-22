@@ -10,27 +10,33 @@ export const DEMO_ACCOUNTS = {
 };
 
 export const HOME_BY_ROLE = {
-  candidate: "/candidate",
-  company: "/company",
-  admin: "/admin",
+  candidate: "/candidate/dashboard",
+  company: "/company/dashboard",
+  admin: "/admin/dashboard",
 };
 
 // Used when storage is blocked (private mode, disabled site data).
 let memorySession = null;
 
-function readJSON(key, fallback) {
+// "local" survives restarts ("Remember me"); "session" lasts until the tab closes.
+// Resolved inside try blocks because merely touching the storage globals can throw.
+function storage(kind) {
+  return kind === "session" ? sessionStorage : localStorage;
+}
+
+function readJSON(key, fallback, kind = "local") {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = storage(kind).getItem(key);
     return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
   }
 }
 
-function writeJSON(key, value) {
+function writeJSON(key, value, kind = "local") {
   try {
-    if (value === null) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(value));
+    if (value === null) storage(kind).removeItem(key);
+    else storage(kind).setItem(key, JSON.stringify(value));
   } catch {
     // Storage unavailable: the session lives in memory only.
   }
@@ -41,35 +47,40 @@ function getRegisteredUsers() {
 }
 
 export function getSession() {
-  return readJSON(SESSION_KEY, memorySession);
+  return readJSON(SESSION_KEY, null) ?? readJSON(SESSION_KEY, memorySession, "session");
 }
 
-function saveSession(user) {
+function saveSession(user, remember) {
   memorySession = { username: user.username, name: user.name, role: user.role };
-  writeJSON(SESSION_KEY, memorySession);
+  writeJSON(SESSION_KEY, memorySession, remember ? "local" : "session");
 }
 
 export function logout() {
   memorySession = null;
   writeJSON(SESSION_KEY, null);
+  writeJSON(SESSION_KEY, null, "session");
 }
 
-export function login(username, password) {
-  const name = username.trim().toLowerCase();
+// `identifier` is a username, or the email of a self-registered account.
+export function login(identifier, password, remember = false) {
+  const username = identifier.trim().toLowerCase();
   const { candidate, admin, company } = DEMO_ACCOUNTS;
   let user = null;
 
-  if (name === candidate.username && password === candidate.password) {
+  if (username === candidate.username && password === candidate.password) {
     user = candidate;
-  } else if (name === admin.username && password === admin.password) {
+  } else if (username === admin.username && password === admin.password) {
     user = admin;
-  } else if (name === company.username && password === company.password) {
+  } else if (username === company.username && password === company.password) {
     user = company;
   } else {
-    user = getRegisteredUsers().find((u) => u.username === name && u.password === password) ?? null;
+    user =
+      getRegisteredUsers().find(
+        (u) => (u.username === username || u.email.toLowerCase() === username) && u.password === password,
+      ) ?? null;
   }
 
-  if (user) saveSession(user);
+  if (user) saveSession(user, remember);
   return user;
 }
 
