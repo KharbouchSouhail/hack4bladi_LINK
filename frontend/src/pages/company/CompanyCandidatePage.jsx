@@ -3,11 +3,12 @@ import { ArrowLeft } from "lucide-react";
 import ApplicationReview from "../../components/editors/ApplicationReview.jsx";
 import { QueryBoundary } from "../../components/ui/states.jsx";
 import { useQuery } from "../../hooks/useQuery.js";
-import { getApplication, updateApplicationStatus } from "../../services/companyApi.js";
+import * as companyApi from "../../services/companyApi.js";
 
-export default function CompanyCandidatePage({ backTo = "/company/candidates", backLabel = "Candidate pipeline", fetcher = getApplication, updater = updateApplicationStatus }) {
+// Shared by companies and admins; `api` is the role's service module, which enforces access itself.
+export default function CompanyCandidatePage({ backTo = "/company/candidates", backLabel = "Candidate pipeline", api = companyApi }) {
   const { appId } = useParams();
-  const query = useQuery(() => fetcher(appId), [appId]);
+  const query = useQuery(() => api.getApplication(appId), [appId]);
 
   return (
     <div>
@@ -15,7 +16,7 @@ export default function CompanyCandidatePage({ backTo = "/company/candidates", b
         <ArrowLeft aria-hidden="true" size={16} /> {backLabel}
       </Link>
       <QueryBoundary query={query} rows={8}>
-        {(detail) => <ApplicationReview detail={detail} onStatusChange={updater} />}
+        {(detail) => <ApplicationReview detail={detail} api={api} />}
       </QueryBoundary>
     </div>
   );

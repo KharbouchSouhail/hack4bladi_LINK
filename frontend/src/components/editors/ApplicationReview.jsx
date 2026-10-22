@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { CheckCircle2, CircleDashed, EyeOff, FileText, Info, Mail, MapPin } from "lucide-react";
+import { CalendarPlus, CheckCircle2, CircleDashed, EyeOff, FileText, FlaskConical, Info, Lock, Mail, MapPin, PartyPopper, Send, Star } from "lucide-react";
 import { EligibilityBadge } from "../candidate/shared.jsx";
 import Badge, { StatusBadge } from "../ui/Badge.jsx";
 import Card from "../ui/Card.jsx";
-import { Select, Textarea } from "../ui/form.jsx";
 import { ProgressBar } from "../ui/Progress.jsx";
 import { APPLICATION_STATUSES, REQUIREMENT_RULES } from "../../domain/constants.js";
 import { useAction } from "../../hooks/useQuery.js";
-import { formatDate, initials } from "../../lib/format.js";
+import { formatMoney, PLACEMENT_STATUSES, RECOMMENDATIONS } from "../../domain/recruitment.js";
+import { formatDate, formatDateTime, initials } from "../../lib/format.js";
+import { CancelInterviewDialog, CompleteInterviewDialog, ConfirmHireDialog, ExtendOfferDialog, RejectDialog, ScheduleInterviewDialog } from "../recruitment/RecruiterDialogs.jsx";
+import { InterviewDetails, InterviewStatusBadge, JoinInterviewButton, MeetingLinkNote, StageTracker } from "../recruitment/shared.jsx";
 import Button from "../Button.jsx";
 
 function NotShared() {
@@ -20,32 +22,199 @@ function NotShared() {
 
 const STRENGTH_TEXT = { professional: "Work experience", demonstrated: "Project", mentioned: "Listed" };
 
-function StatusForm({ detail, onStatusChange }) {
-  const [status, setStatus] = useState(detail.status);
-  const [note, setNote] = useState("");
-  const [run, pending] = useAction();
+const STAGE_ACTION_LABELS = { under_review: "Move to review", shortlisted: "Shortlist" };
 
-  async function submit(event) {
-    event.preventDefault();
-    const { ok } = await run(() => onStatusChange(detail.id, status, note), { success: `Status updated to ${APPLICATION_STATUSES[status].label}.` });
-    if (ok) setNote("");
+// Only the moves the workflow allows from the current stage are offered.
+function StageActions({ detail, api, onOpen }) {
+  const [run, pending] = useAction();
+  const { actions } = detail;
+  const name = detail.candidate.name;
+  const scheduled = detail.interviews.find((i) => i.status === "scheduled");
+
+  const move = (status) => run(() => api.updateApplicationStatus(detail.id, status, ""), { success: `${name} moved to ${APPLICATION_STATUSES[status].label}.` });
+
+  const buttons = [];
+  if (actions.canHire) {
+    buttons.push(
+      <Button key="hire" variant="solid" size="sm" className="w-full" onClick={() => onOpen("hire")}>
+        <PartyPopper aria-hidden="true" size={16} /> Confirm hire
+      </Button>,
+    );
+  }
+  if (actions.canOffer) {
+    buttons.push(
+      <Button key="offer" variant="solid" size="sm" className="w-full" onClick={() => onOpen("offer")}>
+        <Send aria-hidden="true" size={16} /> Extend offer
+      </Button>,
+    );
+  }
+  if (actions.canSchedule) {
+    buttons.push(
+      <Button key="schedule" variant={actions.canOffer ? "secondary" : "solid"} size="sm" className="w-full" onClick={() => onOpen("schedule")}>
+        <CalendarPlus aria-hidden="true" size={16} /> {detail.status === "interview_completed" ? "Schedule another round" : "Schedule interview"}
+      </Button>,
+    );
+  }
+  for (const status of actions.stages) {
+    buttons.push(
+      <Button key={status} loading={pending} variant={status === "shortlisted" ? "solid" : "secondary"} size="sm" className="w-full" onClick={() => move(status)}>
+        {STAGE_ACTION_LABELS[status] ?? APPLICATION_STATUSES[status].label}
+      </Button>,
+    );
+  }
+
+  if (!actions.canReject && buttons.length === 0) {
+    return <p className="text-[13px] text-gray-600">This application is closed. No further stage changes are possible.</p>;
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <Select label="Application status" value={status} onChange={(e) => setStatus(e.target.value)} options={Object.entries(APPLICATION_STATUSES).map(([value, s]) => ({ value, label: s.label }))} />
-      <Textarea label="Internal note (optional)" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
-      <Button loading={pending} type="submit" variant="solid" size="sm" className="w-full" disabled={pending || status === detail.status}>
-        {pending ? "Updating…" : "Update status"}
-      </Button>
-      <p className="text-[11px] text-gray-500">The candidate is notified. Hiring decisions are always yours; Link only records them.</p>
-    </form>
+    <div className="space-y-2">
+      {scheduled && (
+        <p className="text-xs text-gray-600">
+          Interview on {formatDateTime(scheduled.scheduledAt, scheduled.timeZone)}. Complete, reschedule or cancel it in Interviews.
+        </p>
+      )}
+      {buttons}
+      {actions.canReject && (
+        <Button variant="ghost" size="sm" className="w-full text-error! hover:bg-error-bg!" onClick={() => onOpen("reject")}>
+          Reject application
+        </Button>
+      )}
+      <p className="pt-1 text-[11px] text-gray-500">The candidate is notified of every change. Hiring decisions are always yours; CareerBridge only records them.</p>
+    </div>
+  );
+}
+
+function InterviewItem({ interview, onAction }) {
+  const started = new Date(interview.scheduledAt).getTime() <= Date.now();
+  return (
+    <li className="py-4 first:pt-0 last:pb-0">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-gray-900">
+          Round {interview.round} <InterviewStatusBadge interview={interview} />
+          {interview.candidateConfirmedAt && interview.status === "scheduled" && (
+            <Badge tone="success" icon={CheckCircle2}>
+              Candidate confirmed
+            </Badge>
+          )}
+        </p>
+        {interview.status === "scheduled" && (
+          <div className="flex flex-wrap gap-1.5">
+            <JoinInterviewButton interview={interview} size="xs" />
+            <Button variant="secondary" size="xs" onClick={() => onAction("complete", interview)} disabled={!started} title={started ? undefined : "Available once the interview has started"}>
+              Mark completed
+            </Button>
+            <Button variant="secondary" size="xs" onClick={() => onAction("reschedule", interview)}>
+              Reschedule
+            </Button>
+            <Button variant="ghost" size="xs" className="text-error! hover:bg-error-bg!" onClick={() => onAction("cancel", interview)}>
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
+      <InterviewDetails interview={interview} />
+      <div className="mt-2">
+        <MeetingLinkNote interview={interview} />
+      </div>
+      {interview.status === "scheduled" && !started && <p className="mt-2 text-[11px] text-gray-500">You can mark it completed once its start time has passed.</p>}
+      {interview.status === "cancelled" && interview.cancelReason && <p className="mt-3 text-xs text-gray-600">Cancellation message: “{interview.cancelReason}”</p>}
+      {interview.feedback && (
+        <div className="mt-3 rounded-md border border-gray-200 bg-gray-50/70 px-3.5 py-3">
+          <p className="mb-1.5 flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-800">
+            <Lock aria-hidden="true" size={13} /> Internal feedback
+            <span className="inline-flex" role="img" aria-label={`${interview.feedback.rating} out of 5`}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star key={n} aria-hidden="true" size={13} className={n <= interview.feedback.rating ? "fill-warning text-warning" : "text-gray-300"} />
+              ))}
+            </span>
+            <StatusBadge map={RECOMMENDATIONS} value={interview.feedback.recommendation} />
+          </p>
+          <p className="text-[13px] whitespace-pre-line text-gray-700">{interview.feedback.notes}</p>
+          <p className="mt-1.5 text-[11px] text-gray-500">
+            {interview.feedback.by} · {formatDate(interview.feedback.at)} · not visible to the candidate
+          </p>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function InterviewsCard({ detail, onAction }) {
+  return (
+    <Card
+      title="Interviews"
+      description="Scheduling, logistics and private feedback."
+      action={
+        detail.actions.canSchedule && (
+          <Button variant="secondary" size="xs" onClick={() => onAction("schedule")}>
+            <CalendarPlus aria-hidden="true" size={14} /> Schedule
+          </Button>
+        )
+      }
+    >
+      {detail.interviews.length === 0 ? (
+        <p className="text-[13px] text-gray-500">{detail.actions.canSchedule ? "No interviews yet." : "Shortlist the candidate to schedule an interview."}</p>
+      ) : (
+        <ul className="divide-y divide-gray-100">
+          {detail.interviews.map((i) => (
+            <InterviewItem key={i.id} interview={i} onAction={onAction} />
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+const OFFER_STATUSES = {
+  extended: { label: "Awaiting hire confirmation", tone: "accent" },
+  accepted: { label: "Hire confirmed", tone: "success" },
+  withdrawn: { label: "Withdrawn", tone: "neutral" },
+};
+
+function OfferCard({ offer, placement }) {
+  const rows = [
+    ["Extended", formatDate(offer.extendedAt)],
+    offer.startDate && ["Start date", formatDate(offer.startDate)],
+    offer.annualSalary && ["Annual salary", formatMoney(offer.annualSalary, offer.currency)],
+  ].filter(Boolean);
+  return (
+    <Card title="Offer and hire" action={<StatusBadge map={OFFER_STATUSES} value={offer.status} />}>
+      <dl className="space-y-2 text-[13px]">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-3">
+            <dt className="text-gray-500">{label}</dt>
+            <dd className="text-gray-900 tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <blockquote className="mt-3 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700">“{offer.message}”</blockquote>
+      {placement && (
+        <div className="mt-4 border-t border-gray-100 pt-3 text-[13px]">
+          <p className="flex items-center justify-between gap-2">
+            <span className="font-medium text-gray-900">Placement recorded</span>
+            <StatusBadge map={PLACEMENT_STATUSES} value={placement.status} />
+          </p>
+          <p className="mt-0.5 text-xs text-gray-500">Hire date {formatDate(placement.hireDate)}</p>
+          {placement.commission && (
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-gray-600">
+              <FlaskConical aria-hidden="true" size={13} className="mt-px shrink-0 text-cyan-600" />
+              Illustrative commission {formatMoney(placement.commission.amount, placement.commission.currency)}. Demo figure, not invoiced.
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }
 
 // Full review of one application, shared by the company pipeline and the admin console.
-export default function ApplicationReview({ detail, onStatusChange }) {
+// `api` holds the role's recruitment functions (company or admin); each enforces access itself.
+export default function ApplicationReview({ detail, api }) {
   const confirmed = detail.evidence?.filter((e) => e.confirmed) ?? [];
+  const [dialog, setDialog] = useState(null);
+  const open = (kind, interview = null) => setDialog({ kind, interview });
+  const close = () => setDialog(null);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -76,6 +245,8 @@ export default function ApplicationReview({ detail, onStatusChange }) {
             ))}
           </ul>
         </Card>
+
+        <InterviewsCard detail={detail} onAction={open} />
 
         <Card title="Skill-test results" description="Validated evidence, graded automatically.">
           {detail.assessments === null ? (
@@ -146,10 +317,15 @@ export default function ApplicationReview({ detail, onStatusChange }) {
           <StatusBadge map={APPLICATION_STATUSES} value={detail.status} />
           <p className="mt-2 text-xs text-gray-500">Applied {formatDate(detail.createdAt)} to {detail.job.title}</p>
           {detail.note && <blockquote className="mt-3 rounded-md bg-gray-50 px-3 py-2 text-[13px] text-gray-700">“{detail.note}”</blockquote>}
+          <div className="mt-4">
+            <StageTracker status={detail.status} history={detail.history} compact />
+          </div>
           <div className="mt-4 border-t border-gray-100 pt-4">
-            <StatusForm key={detail.status} detail={detail} onStatusChange={onStatusChange} />
+            <StageActions detail={detail} api={api} onOpen={open} />
           </div>
         </Card>
+
+        {detail.offer && <OfferCard offer={detail.offer} placement={detail.placement} />}
 
         {detail.match && (
           <Card title="Profile alignment">
@@ -161,18 +337,29 @@ export default function ApplicationReview({ detail, onStatusChange }) {
           </Card>
         )}
 
-        <Card title="History">
+        <Card title="History" description="Notes are internal and never shown to the candidate.">
           <ol className="space-y-2.5">
             {[...detail.history].reverse().map((h, i) => (
               <li key={i} className="text-[13px]">
-                <span className="font-medium text-gray-900">{APPLICATION_STATUSES[h.status].label}</span>
-                <span className="text-xs text-gray-500"> · {formatDate(h.at)}</span>
+                <span className="font-medium text-gray-900">{APPLICATION_STATUSES[h.status]?.label ?? h.status}</span>
+                <span className="text-xs text-gray-500">
+                  {" "}
+                  · {formatDate(h.at)}
+                  {h.by && ` · ${h.by}`}
+                </span>
                 {h.note && <p className="text-xs text-gray-600">{h.note}</p>}
               </li>
             ))}
           </ol>
         </Card>
       </div>
+      {dialog?.kind === "schedule" && <ScheduleInterviewDialog open onClose={close} application={detail} api={api} />}
+      {dialog?.kind === "reschedule" && <ScheduleInterviewDialog open onClose={close} application={detail} interview={dialog.interview} api={api} />}
+      {dialog?.kind === "cancel" && <CancelInterviewDialog open onClose={close} application={detail} interview={dialog.interview} api={api} />}
+      {dialog?.kind === "complete" && <CompleteInterviewDialog open onClose={close} interview={dialog.interview} api={api} />}
+      {dialog?.kind === "offer" && <ExtendOfferDialog open onClose={close} application={detail} api={api} />}
+      {dialog?.kind === "hire" && <ConfirmHireDialog open onClose={close} application={detail} api={api} />}
+      {dialog?.kind === "reject" && <RejectDialog open onClose={close} application={detail} api={api} />}
     </div>
   );
 }

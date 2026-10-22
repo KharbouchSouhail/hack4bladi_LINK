@@ -10,6 +10,7 @@ import { computeMatch } from "../domain/scoring.js";
 import { runStructuredAnalysis } from "./analyzer.js";
 import { findOr404, getDb, logActivity, lookups, mutate, newId, notify, request, requireRole, validate } from "./core.js";
 import { AccessError, NotFoundError, ValidationError } from "./errors.js";
+import { candidateInterviewView, confirmAttendance } from "./recruitment.js";
 import { ExtractionError, extractResumeText, hasExpectedSignature, resumeKind, RESUME_TYPES, sha256 } from "./resumeText.js";
 
 const MAX_RESUME_BYTES = 5 * 1024 * 1024;
@@ -75,8 +76,13 @@ function jobView(db, job, ctx, candidate) {
       status: eligibility.status,
       checklist: eligibility.checklist.map((c) => ({ ...c, name: map.skills[c.skillId]?.name ?? c.skillId })),
     },
-    application: db.applications.find((a) => a.jobId === job.id && a.candidateId === candidate.id) ?? null,
+    application: applicationSummary(db.applications.find((a) => a.jobId === job.id && a.candidateId === candidate.id)),
   };
+}
+
+// Status only: the history holds internal recruiter notes.
+function applicationSummary(app) {
+  return app ? { id: app.id, status: app.status, createdAt: app.createdAt } : null;
 }
 
 function visibleJobs(db) {
@@ -821,29 +827,83 @@ export function applyToJob(jobId, { note, consent }) {
         consent: { profile: true, evidence: Boolean(consent.evidence), tests: Boolean(consent.tests), learning: Boolean(consent.learning) },
         createdAt: now,
         updatedAt: now,
-        history: [{ status: "submitted", at: now }],
+        history: [{ status: "submitted", at: now, note: "", by: candidate.name }],
+        offer: null,
       };
       draft.applications.push(app);
-      notify(draft, `company:${company.id}`, `${candidate.name} applied to ${job.title}.`, `/company/candidates/${app.id}`);
-      notify(draft, "admin", `${candidate.name} applied to ${job.title} (${company.name}).`, "/admin/applications");
+      const ref = { type: "application", ref: { applicationId: app.id } };
+      notify(draft, `company:${company.id}`, `${candidate.name} applied to ${job.title}.`, `/company/candidates/${app.id}`, ref);
+      notify(draft, "admin", `${candidate.name} applied to ${job.title} (${company.name}).`, `/admin/applications/${app.id}`, ref);
       logActivity(draft, `${candidate.name} applied to ${job.title} (${company.name})`);
       return app;
     });
   });
 }
 
+// Candidate-facing application: status and dates only. Internal notes, recruiter names, interview feedback
+// and placement/commission data never leave the "server".
+function myApplicationView(db, app) {
+  const map = lookups(db);
+  const job = map.jobs[app.jobId];
+  const company = map.companies[job.companyId];
+  const interviews = db.interviews
+    .filter((i) => i.applicationId === app.id)
+    .map(candidateInterviewView)
+    .sort((a, b) => b.scheduledAt.localeCompare(a.scheduledAt));
+  const offer = app.offer && {
+    status: app.offer.status,
+    extendedAt: app.offer.extendedAt,
+    startDate: app.offer.startDate,
+    annualSalary: app.offer.annualSalary,
+    currency: app.offer.currency,
+    message: app.offer.message,
+  };
+  return {
+    id: app.id,
+    jobId: app.jobId,
+    status: app.status,
+    note: app.note,
+    consent: app.consent,
+    createdAt: app.createdAt,
+    updatedAt: app.updatedAt,
+    history: app.history.map((h) => ({ status: h.status, at: h.at })),
+    job: { id: job.id, title: job.title, location: job.location, workMode: job.workMode, employmentType: job.employmentType },
+    companyName: company?.name,
+    interviews,
+    nextInterview: interviews.filter((i) => i.status === "scheduled").sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))[0] ?? null,
+    offer,
+    hireDate: app.status === "hired" ? (db.placements.find((p) => p.applicationId === app.id)?.hireDate ?? null) : null,
+  };
+}
+
 export function listMyApplications() {
   return request(() => {
     const candidate = currentCandidate();
     const db = getDb();
-    const map = lookups(db);
     return db.applications
       .filter((a) => a.candidateId === candidate.id)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .map((a) => {
-        const job = map.jobs[a.jobId];
-        return { ...a, job: { id: job.id, title: job.title, location: job.location }, companyName: map.companies[job.companyId]?.name };
-      });
+      .map((a) => myApplicationView(db, a));
+  });
+}
+
+export function getMyApplication(appId) {
+  return request(() => {
+    const candidate = currentCandidate();
+    const db = getDb();
+    // Another candidate's application is reported as missing, so ids can't be probed.
+    const app = db.applications.find((a) => a.id === appId && a.candidateId === candidate.id);
+    if (!app) throw new NotFoundError("Application");
+    return myApplicationView(db, app);
+  });
+}
+
+export function confirmInterviewAttendance(interviewId) {
+  return request(() => {
+    const candidate = currentCandidate();
+    const interview = getDb().interviews.find((i) => i.id === interviewId && i.candidateId === candidate.id);
+    if (!interview) throw new NotFoundError("Interview");
+    return candidateInterviewView(mutate((draft) => confirmAttendance(draft, interviewId)));
   });
 }
 

@@ -1,6 +1,7 @@
 // Demo persistence: the whole dataset lives in localStorage and syncs across tabs,
 // so a candidate and a company can be demoed side by side. Replace with real API calls later.
 import { createSeed } from "../data/seed.js";
+import { DEFAULT_COMMISSION } from "../domain/recruitment.js";
 
 const KEY = "link_demo_db_v1";
 const listeners = new Set();
@@ -10,6 +11,17 @@ let version = 0;
 // Brings a dataset saved by an older build up to the current shape, without touching existing records.
 export function migrate(data) {
   data.analyses ??= [];
+  // Recruitment workflow (interviews, offers, placements). The old single "interview" stage is now
+  // "interview_scheduled"; applications and their history keep everything else as recorded.
+  data.interviews ??= [];
+  data.placements ??= [];
+  data.settings ??= {};
+  data.settings.commission ??= { ...DEFAULT_COMMISSION };
+  for (const app of data.applications ?? []) {
+    if (app.status === "interview") app.status = "interview_scheduled";
+    for (const h of app.history ?? []) if (h.status === "interview") h.status = "interview_scheduled";
+    app.offer ??= null;
+  }
   return data;
 }
 
@@ -20,7 +32,7 @@ function load() {
   } catch {
     // Unreadable or blocked storage: fall back to a fresh seed in memory.
   }
-  return createSeed();
+  return migrate(createSeed());
 }
 
 function persist() {
@@ -55,7 +67,7 @@ export function mutate(fn) {
 }
 
 export function resetDb() {
-  db = createSeed();
+  db = migrate(createSeed());
   persist();
   emit();
 }

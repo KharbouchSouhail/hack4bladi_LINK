@@ -4,7 +4,10 @@ import { buildContext, courseProgress } from "../domain/evidence.js";
 import { PLANS } from "../domain/permissions.js";
 import { computeMatch } from "../domain/scoring.js";
 import { youtubeId } from "../lib/format.js";
+import { PLACEMENT_STATUSES, PLACEMENT_TRANSITIONS, validateCommissionSettings } from "../domain/recruitment.js";
 import { applicationDetail, applicationRow, changeApplicationStatus, saveJob, saveProfile, setJobStatus } from "./shared.js";
+import * as recruitment from "./recruitment.js";
+import { getSession } from "../auth/auth.js";
 import { findOr404, getDb, logActivity, lookups, mutate, newId, request, requireRole, validate } from "./core.js";
 import { ValidationError } from "./errors.js";
 
@@ -48,6 +51,8 @@ export function getOverview() {
       attempts: db.attempts.length,
       passedAttempts: db.attempts.filter((a) => a.passed).length,
       applications: db.applications.length,
+      upcomingInterviews: db.interviews.filter((i) => i.status === "scheduled").length,
+      placements: db.placements.filter((p) => p.status !== "cancelled").length,
     },
     perStatus: Object.keys(APPLICATION_STATUSES).map((s) => ({ status: s, count: db.applications.filter((a) => a.status === s).length })),
     perPlan: Object.keys(PLANS).map((p) => ({ plan: p, count: db.candidates.filter((c) => c.plan === p).length })),
@@ -488,11 +493,125 @@ export function listApplications() {
 }
 
 export function getApplication(appId) {
-  return admin((db) => applicationDetail(db, findOr404(db.applications, appId, "Application"), { respectConsent: false }));
+  return admin((db) => applicationDetail(db, findOr404(db.applications, appId, "Application"), { respectConsent: false, includeCommission: true }));
+}
+
+function actor() {
+  return { role: "admin", name: getSession().name };
 }
 
 export function updateApplicationStatus(appId, status, note) {
-  return admin(() => mutate((draft) => changeApplicationStatus(draft, appId, status, note)));
+  return admin(() => mutate((draft) => changeApplicationStatus(draft, appId, status, note, actor())));
+}
+
+// ---- Interviews, offers and hires ----
+
+export function scheduleInterview(appId, input) {
+  return admin(() => mutate((draft) => recruitment.scheduleInterview(draft, appId, input, actor())));
+}
+
+export function rescheduleInterview(interviewId, input) {
+  return admin(() => mutate((draft) => recruitment.rescheduleInterview(draft, interviewId, input, actor())));
+}
+
+export function cancelInterview(interviewId, reason) {
+  return admin(() => mutate((draft) => recruitment.cancelInterview(draft, interviewId, reason, actor())));
+}
+
+export function completeInterview(interviewId, feedback) {
+  return admin(() => mutate((draft) => recruitment.completeInterview(draft, interviewId, feedback, actor())));
+}
+
+export function extendOffer(appId, input) {
+  return admin(() => mutate((draft) => recruitment.extendOffer(draft, appId, input, actor())));
+}
+
+export function confirmHire(appId, input) {
+  return admin(() => mutate((draft) => recruitment.confirmHire(draft, appId, input, actor())));
+}
+
+export function listInterviews() {
+  return admin((db) => {
+    const map = lookups(db);
+    return db.interviews
+      .map((i) => ({
+        ...i,
+        candidateName: map.candidates[i.candidateId]?.name,
+        jobTitle: map.jobs[i.jobId]?.title,
+        companyName: map.companies[i.companyId]?.name,
+      }))
+      .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
+  });
+}
+
+// ---- Placements and commission (illustrative demo figures) ----
+
+export function listPlacements() {
+  return admin((db) => {
+    const map = lookups(db);
+    const placements = db.placements
+      .map((p) => {
+        const app = db.applications.find((a) => a.id === p.applicationId);
+        return {
+          ...p,
+          candidateName: map.candidates[p.candidateId]?.name,
+          companyName: map.companies[p.companyId]?.name,
+          jobTitle: map.jobs[p.jobId]?.title,
+          applicationStatus: app?.status,
+          offerSalary: app?.offer?.annualSalary ?? null,
+        };
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const counted = placements.filter((p) => p.status !== "cancelled");
+    return {
+      settings: db.settings.commission,
+      placements,
+      totals: {
+        count: counted.length,
+        // Sum of illustrative calculations, grouped by currency; never presented as revenue.
+        estimated: Object.entries(
+          counted.reduce((sum, p) => ({ ...sum, [p.commission.currency]: (sum[p.commission.currency] ?? 0) + p.commission.amount }), {}),
+        ).map(([currency, amount]) => ({ currency, amount })),
+      },
+    };
+  });
+}
+
+export function saveCommissionSettings(input) {
+  return admin(() => {
+    validate(validateCommissionSettings(input));
+    return mutate((draft) => {
+      draft.settings.commission = {
+        model: input.model,
+        ratePercent: Number(input.ratePercent),
+        fixedFee: Number(input.fixedFee),
+        defaultReferenceAmount: Number(input.defaultReferenceAmount),
+        currency: input.currency,
+      };
+      logActivity(draft, "Commission settings updated (demo)");
+      return draft.settings.commission;
+    });
+  });
+}
+
+export function setPlacementStatus(placementId, status, note = "") {
+  return admin((db) => {
+    const placement = findOr404(db.placements, placementId, "Placement");
+    if (!PLACEMENT_STATUSES[status]) throw new ValidationError({ status: "Unknown status." });
+    if (!PLACEMENT_TRANSITIONS[placement.status].includes(status)) {
+      throw new ValidationError({}, `A placement that is “${PLACEMENT_STATUSES[placement.status].label}” can't become “${PLACEMENT_STATUSES[status].label}”.`);
+    }
+    return mutate((draft) => {
+      const record = draft.placements.find((p) => p.id === placementId);
+      const at = new Date().toISOString();
+      record.status = status;
+      record.updatedAt = at;
+      record.history.push({ status, at, by: getSession().name, note: note.trim() });
+      const candidate = draft.candidates.find((c) => c.id === record.candidateId);
+      logActivity(draft, `Placement for ${candidate?.name} set to ${PLACEMENT_STATUSES[status].label}`);
+      return record;
+    });
+  });
 }
 
 // Reference data for admin forms.

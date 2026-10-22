@@ -39,7 +39,12 @@ import CompanyJobProfilesPage from "./pages/company/CompanyJobProfilesPage.jsx";
 import CompanyJobsPage from "./pages/company/CompanyJobsPage.jsx";
 import CompanyPipelinePage from "./pages/company/CompanyPipelinePage.jsx";
 import CompanyProfilePage from "./pages/company/CompanyProfilePage.jsx";
-import { getApplication as adminGetApplication, updateApplicationStatus as adminUpdateStatus } from "./services/adminApi.js";
+import InterviewsPage from "./pages/InterviewsPage.jsx";
+import NotificationsPage from "./pages/NotificationsPage.jsx";
+import AdminPlacementsPage from "./pages/admin/AdminPlacementsPage.jsx";
+import ApplicationDetailPage from "./pages/candidate/ApplicationDetailPage.jsx";
+import * as adminApi from "./services/adminApi.js";
+import { listInterviews as companyListInterviews } from "./services/companyApi.js";
 
 export default function App() {
   return (
@@ -71,6 +76,8 @@ export default function App() {
             <Route path="jobs" element={<JobsPage />} />
             <Route path="jobs/:jobId" element={<JobDetailPage />} />
             <Route path="applications" element={<ApplicationsPage />} />
+            <Route path="applications/:appId" element={<ApplicationDetailPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="subscription" element={<SubscriptionPage />} />
             <Route path="settings" element={<SettingsPage role="candidate" />} />
             <Route path="*" element={<NotFoundPage home="/candidate/dashboard" />} />
@@ -92,6 +99,8 @@ export default function App() {
             <Route path="candidates" element={<CompanyPipelinePage />} />
             <Route path="candidates/:appId" element={<CompanyCandidatePage />} />
             <Route path="applications" element={<CompanyApplicationsBoard />} />
+            <Route path="interviews" element={<InterviewsPage listInterviews={companyListInterviews} detailPath="/company/candidates" />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="analytics" element={<CompanyAnalyticsPage />} />
             <Route path="settings" element={<SettingsPage role="company" />} />
             <Route path="*" element={<NotFoundPage home="/company/dashboard" />} />
@@ -119,8 +128,11 @@ export default function App() {
             <Route path="applications" element={<AdminApplicationsPage />} />
             <Route
               path="applications/:appId"
-              element={<CompanyCandidatePage backTo="/admin/applications" backLabel="Applications" fetcher={adminGetApplication} updater={adminUpdateStatus} />}
+              element={<CompanyCandidatePage backTo="/admin/applications" backLabel="Applications" api={adminApi} />}
             />
+            <Route path="interviews" element={<InterviewsPage listInterviews={adminApi.listInterviews} detailPath="/admin/applications" showCompany />} />
+            <Route path="placements" element={<AdminPlacementsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
             <Route path="settings" element={<SettingsPage role="admin" />} />
             <Route path="*" element={<NotFoundPage home="/admin/dashboard" />} />

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { AlertCircle, BadgeCheck, Briefcase, Inbox, Plus, Star, Users } from "lucide-react";
+import { AlertCircle, BadgeCheck, Briefcase, CalendarClock, Inbox, Plus, Star, Users } from "lucide-react";
 import { buttonClasses } from "../../components/Button.jsx";
 import { CompanyMark, EligibilityBadge } from "../../components/candidate/shared.jsx";
+import { JoinInterviewButton } from "../../components/recruitment/shared.jsx";
 import { StatusBadge } from "../../components/ui/Badge.jsx";
 import Card, { StatTile } from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
@@ -9,7 +10,7 @@ import { BarList } from "../../components/ui/Progress.jsx";
 import { EmptyState, QueryBoundary } from "../../components/ui/states.jsx";
 import { APPLICATION_STATUSES, PARTNER_STATUSES } from "../../domain/constants.js";
 import { useQuery } from "../../hooks/useQuery.js";
-import { formatDate } from "../../lib/format.js";
+import { formatDate, formatDateTime, formatRelative } from "../../lib/format.js";
 import { getOverview } from "../../services/companyApi.js";
 
 const RECENT_COLUMNS = [
@@ -33,7 +34,7 @@ export default function CompanyDashboard() {
 
   return (
     <QueryBoundary query={query} rows={8}>
-      {({ company, stats, statusCounts, attention, recent }) => (
+      {({ company, stats, statusCounts, attention, recent, upcomingInterviews }) => (
         <div className="space-y-6">
           <section className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -62,7 +63,7 @@ export default function CompanyDashboard() {
             <StatTile label="Active job listings" value={stats.publishedJobs} hint={`${stats.draftJobs} in draft`} icon={Briefcase} />
             <StatTile label="Total applications" value={stats.totalApplications} hint={`${stats.awaitingReview} awaiting review`} icon={Inbox} />
             <StatTile label="Meeting job requirements" value={stats.meetingCriteria} hint="Based on configured eligibility rules" icon={BadgeCheck} />
-            <StatTile label="Shortlisted or interviewing" value={stats.shortlisted} icon={Star} />
+            <StatTile label="Shortlisted or interviewing" value={stats.shortlisted} hint={`${stats.offers} offers out · ${stats.hired} hired`} icon={Star} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -97,6 +98,39 @@ export default function CompanyDashboard() {
               )}
             </Card>
           </div>
+
+          <Card
+            data-reveal="up"
+            title="Upcoming interviews"
+            description="Times shown in each interview's own time zone."
+            action={<Link to="/company/interviews" className={buttonClasses("secondary", "", "xs")}>All interviews</Link>}
+            bodyClassName=""
+          >
+            {upcomingInterviews.length === 0 ? (
+              <EmptyState icon={CalendarClock} title="No interviews scheduled">
+                Shortlist a candidate, then schedule an interview from their page.
+              </EmptyState>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {upcomingInterviews.map((i) => (
+                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <CalendarClock aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-accent-600" />
+                      <div className="min-w-0">
+                        <Link to={`/company/candidates/${i.applicationId}`} className="text-[13px] font-medium text-gray-900 hover:underline">
+                          {i.candidateName} · {i.jobTitle}
+                        </Link>
+                        <p className="text-xs text-gray-500">
+                          {formatDateTime(i.scheduledAt, i.timeZone)} ({i.timeZone}) · {formatRelative(i.scheduledAt)} · {i.interviewer}
+                        </p>
+                      </div>
+                    </div>
+                    <JoinInterviewButton interview={i} size="xs" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
 
           <Card
             data-reveal="up"

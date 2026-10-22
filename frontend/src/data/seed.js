@@ -5,6 +5,13 @@ function daysAgo(days) {
   return new Date(Date.now() - days * 86400000).toISOString();
 }
 
+// A whole hour `days` from now (negative = past), so seeded interviews look like real slots.
+function slot(days, hourUtc) {
+  const date = new Date(Date.now() + days * 86400000);
+  date.setUTCHours(hourUtc, 0, 0, 0);
+  return date.toISOString();
+}
+
 const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
 
 const SKILLS = [
@@ -564,19 +571,145 @@ const PROGRESS = [
 
 const consent = (learning) => ({ profile: true, evidence: true, tests: true, learning });
 
-function application(id, candidateId, jobId, status, days, learning = true) {
-  const history = [{ status: "submitted", at: daysAgo(days) }];
-  if (status !== "submitted") history.push({ status, at: daysAgo(Math.max(days - 3, 0)) });
-  return { id, candidateId, jobId, status, note: "", consent: consent(learning), createdAt: daysAgo(days), updatedAt: history.at(-1).at, history };
+function application(id, candidateId, jobId, stages, days, learning = true) {
+  // `stages` after "submitted", each [status, days ago, internal note].
+  const history = [{ status: "submitted", at: daysAgo(days), note: "", by: "" }];
+  for (const [status, ago, note = ""] of stages) history.push({ status, at: daysAgo(ago), note, by: "Recruiter (demo)" });
+  return {
+    id,
+    candidateId,
+    jobId,
+    status: history.at(-1).status,
+    note: "",
+    consent: consent(learning),
+    createdAt: daysAgo(days),
+    updatedAt: history.at(-1).at,
+    history,
+    offer: null,
+  };
 }
 
 const APPLICATIONS = [
-  application("app-1", "cand-salma", "job-atlas-ds", "shortlisted", 12),
-  application("app-2", "cand-karim", "job-atlas-ds", "rejected", 20, false),
-  application("app-3", "cand-imane", "job-atlas-intern", "submitted", 2),
-  application("app-4", "cand-salma", "job-atlas-intern", "under_review", 8),
-  application("app-5", "cand-youssef", "job-medina-ml", "interview", 10),
-  application("app-6", "cand-omar", "job-nordwave-da", "under_review", 6, false),
+  application("app-1", "cand-salma", "job-atlas-ds", [["under_review", 11], ["shortlisted", 9, "Strong SQL and Python test results."]], 12),
+  application("app-2", "cand-karim", "job-atlas-ds", [["rejected", 17, "Statistics evidence missing."]], 20, false),
+  application("app-3", "cand-imane", "job-atlas-intern", [], 2),
+  application(
+    "app-4",
+    "cand-salma",
+    "job-atlas-intern",
+    [["under_review", 7], ["shortlisted", 6], ["interview_scheduled", 5, "Interview round 1 scheduled"], ["interview_completed", 1, "Interview round 1 completed"]],
+    8,
+  ),
+  application("app-5", "cand-youssef", "job-medina-ml", [["shortlisted", 7], ["interview_scheduled", 3, "Interview round 1 scheduled"]], 10),
+  application(
+    "app-6",
+    "cand-omar",
+    "job-nordwave-da",
+    [["under_review", 20], ["shortlisted", 18], ["interview_scheduled", 16, "Interview round 1 scheduled"], ["interview_completed", 12, "Interview round 1 completed"], ["offer_extended", 10, "Offer extended"], ["hired", 7, "Hire confirmed"]],
+    24,
+    false,
+  ),
+];
+
+APPLICATIONS[5].offer = {
+  status: "accepted",
+  extendedAt: daysAgo(10),
+  extendedBy: "Nordwave Fintech",
+  startDate: slot(14, 8).slice(0, 10),
+  annualSalary: 120000,
+  currency: "MAD",
+  message: "We're delighted to offer you the Data Analyst — Risk role. Welcome to the team!",
+  closedAt: daysAgo(7),
+};
+
+function interview(id, app, companyId, fields) {
+  const createdAt = fields.createdAt;
+  return {
+    id,
+    applicationId: app,
+    round: 1,
+    durationMinutes: 45,
+    timeZone: "Africa/Casablanca",
+    type: "video",
+    location: "",
+    isDemoLink: true,
+    status: "scheduled",
+    rescheduleCount: 0,
+    previousScheduledAt: null,
+    cancelReason: "",
+    candidateConfirmedAt: null,
+    feedback: null,
+    createdBy: "Recruiter (demo)",
+    updatedAt: createdAt,
+    history: [{ action: "scheduled", at: createdAt, by: "Recruiter (demo)", detail: "" }],
+    companyId,
+    ...fields,
+  };
+}
+
+const INTERVIEWS = [
+  interview("int-1", "app-5", "comp-medina", {
+    candidateId: "cand-youssef",
+    jobId: "job-medina-ml",
+    scheduledAt: slot(2, 9),
+    interviewer: "Dr. Leila Haddad, Head of ML",
+    meetingUrl: "https://meet.jit.si/CareerBridge-Demo-medina-ml",
+    instructions: "Technical conversation about a model you deployed. Have your project notes ready.",
+    createdAt: daysAgo(3),
+  }),
+  interview("int-2", "app-4", "comp-atlas", {
+    candidateId: "cand-salma",
+    jobId: "job-atlas-intern",
+    scheduledAt: slot(-2, 10),
+    interviewer: "Nadia Berrada, Lead Data Scientist",
+    meetingUrl: "https://meet.jit.si/CareerBridge-Demo-atlas-intern",
+    instructions: "30-minute case discussion on demand forecasting, then questions about the internship.",
+    status: "completed",
+    durationMinutes: 60,
+    candidateConfirmedAt: daysAgo(4),
+    feedback: {
+      rating: 4,
+      recommendation: "hire",
+      notes: "Clear reasoning on the forecasting case and good SQL. Needs mentoring on model deployment.",
+      by: "Atlas Analytics",
+      at: daysAgo(1),
+    },
+    createdAt: daysAgo(5),
+  }),
+  interview("int-3", "app-6", "comp-nordwave", {
+    candidateId: "cand-omar",
+    jobId: "job-nordwave-da",
+    scheduledAt: slot(-13, 13),
+    interviewer: "Youssef Kettani, Risk Analytics Manager",
+    meetingUrl: "",
+    isDemoLink: false,
+    type: "onsite",
+    location: "Nordwave Fintech, Avenue Annakhil, Rabat",
+    instructions: "Bring a laptop with Power BI installed.",
+    status: "completed",
+    feedback: { rating: 5, recommendation: "strong_hire", notes: "Excellent dashboard walkthrough and solid SQL fundamentals.", by: "Administrator", at: daysAgo(12) },
+    createdAt: daysAgo(16),
+  }),
+];
+
+// Sample figures for the demo only: no real hire, revenue or commission.
+const PLACEMENTS = [
+  {
+    id: "pl-1",
+    applicationId: "app-6",
+    candidateId: "cand-omar",
+    companyId: "comp-nordwave",
+    jobId: "job-nordwave-da",
+    hireDate: daysAgo(7).slice(0, 10),
+    startDate: APPLICATIONS[5].offer.startDate,
+    status: "confirmed",
+    commission: { model: "percentage", ratePercent: 8, fixedFee: null, referenceAmount: 120000, referenceSource: "offer", amount: 9600, currency: "MAD" },
+    demo: true,
+    confirmedBy: "Administrator",
+    createdAt: daysAgo(7),
+    updatedAt: daysAgo(7),
+    history: [{ status: "confirmed", at: daysAgo(7), by: "Administrator" }],
+  },
 ];
 
 const ACTIVITY = [
@@ -588,6 +721,16 @@ const ACTIVITY = [
 ];
 
 const NOTIFICATIONS = [
+  {
+    id: "n-3",
+    to: "company:comp-atlas",
+    type: "interview",
+    text: "Salma Benali's interview for Data Science Intern (6 months) is complete. Record a decision.",
+    link: "/company/candidates/app-4",
+    ref: { applicationId: "app-4", interviewId: "int-2" },
+    at: daysAgo(1),
+    read: false,
+  },
   { id: "n-1", to: "company:comp-atlas", text: "Imane Chraibi applied to Data Science Intern (6 months).", link: "/company/candidates/app-3", at: daysAgo(2), read: false },
   { id: "n-2", to: "candidate:cand-yassine", text: "Your résumé was analysed for Junior Data Scientist.", link: "/candidate/assessments", at: daysAgo(3), read: false },
 ];
@@ -607,6 +750,9 @@ export function createSeed() {
     applications: APPLICATIONS,
     activity: ACTIVITY,
     notifications: NOTIFICATIONS,
+    interviews: INTERVIEWS,
+    placements: PLACEMENTS,
+    // Commission settings come from DEFAULT_COMMISSION via store.migrate().
     // One record per résumé analysis run (history); the candidate's résumé points at the latest.
     analyses: [],
   });

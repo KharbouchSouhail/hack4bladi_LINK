@@ -40,8 +40,9 @@ export function logActivity(draft, text) {
   draft.activity.length = Math.min(draft.activity.length, 50);
 }
 
-export function notify(draft, to, text, link) {
-  draft.notifications.unshift({ id: newId("n"), to, text, link, at: new Date().toISOString(), read: false });
+// `ref` links the notification to its records, e.g. { applicationId, interviewId }; `type` drives the icon.
+export function notify(draft, to, text, link, { type = "info", ref = {} } = {}) {
+  draft.notifications.unshift({ id: newId("n"), to, type, text, link, ref, at: new Date().toISOString(), read: false });
 }
 
 export function lookups(db = getDb()) {
@@ -63,20 +64,34 @@ export function inboxFor(session, db = getDb()) {
   return "admin";
 }
 
-export function getNotifications() {
+function currentInbox() {
+  const session = getSession();
+  if (!session) throw new AccessError("Sign in to see notifications.");
+  return inboxFor(session);
+}
+
+// Only ever returns the signed-in user's own inbox. `limit` null returns everything.
+export function getNotifications({ limit = 20 } = {}) {
   return request(() => {
-    const session = getSession();
-    if (!session) throw new AccessError("Sign in to see notifications.");
-    const to = inboxFor(session);
-    return getDb().notifications.filter((n) => n.to === to).slice(0, 20);
+    const to = currentInbox();
+    const mine = getDb().notifications.filter((n) => n.to === to);
+    return { items: limit ? mine.slice(0, limit) : mine, unread: mine.filter((n) => !n.read).length, total: mine.length };
+  });
+}
+
+export function markNotificationRead(id) {
+  return request(() => {
+    const to = currentInbox();
+    const item = getDb().notifications.find((n) => n.id === id);
+    // Someone else's notification is reported as missing, so ids can't be probed.
+    if (!item || item.to !== to) throw new NotFoundError("Notification");
+    if (!item.read) mutate((draft) => (draft.notifications.find((n) => n.id === id).read = true));
   });
 }
 
 export function markNotificationsRead() {
   return request(() => {
-    const session = getSession();
-    if (!session) throw new AccessError("Sign in to see notifications.");
-    const to = inboxFor(session);
+    const to = currentInbox();
     mutate((draft) => draft.notifications.forEach((n) => n.to === to && (n.read = true)));
   });
 }

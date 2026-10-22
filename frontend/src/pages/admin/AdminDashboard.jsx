@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Activity, BookOpen, Briefcase, Building2, ClipboardCheck, FileText, ListChecks, Users } from "lucide-react";
+import { Activity, BookOpen, Briefcase, Building2, CalendarClock, ClipboardCheck, FileText, Handshake, ListChecks, Users } from "lucide-react";
 import { buttonClasses } from "../../components/Button.jsx";
 import Card, { PageHeader, StatTile } from "../../components/ui/Card.jsx";
 import { BarList } from "../../components/ui/Progress.jsx";
@@ -18,7 +18,16 @@ export default function AdminDashboard() {
       <PageHeader
         title="Platform overview"
         description="Every figure is calculated from the current demo dataset."
-        actions={<Link to="/admin/job-profiles" className={buttonClasses("solid", "", "sm")}>Manage job profiles</Link>}
+        actions={
+          <>
+            <Link to="/admin/placements" className={buttonClasses("secondary", "", "sm")}>
+              Placements
+            </Link>
+            <Link to="/admin/job-profiles" className={buttonClasses("solid", "", "sm")}>
+              Manage job profiles
+            </Link>
+          </>
+        }
       />
       <QueryBoundary query={query} rows={8}>
         {({ metrics: m, perStatus, perPlan, activity }) => (
@@ -31,6 +40,8 @@ export default function AdminDashboard() {
               <StatTile label="Learning resources" value={m.courses} hint={`${m.tests} published skill tests`} icon={BookOpen} />
               <StatTile label="Completed assessments" value={m.attempts} hint={`${m.passedAttempts} passed`} icon={ClipboardCheck} />
               <StatTile label="Submitted applications" value={m.applications} icon={FileText} />
+              <StatTile label="Upcoming interviews" value={m.upcomingInterviews} icon={CalendarClock} />
+              <StatTile label="Placements" value={m.placements} hint="Hires confirmed through the platform" icon={Handshake} />
               <StatTile
                 label="Test pass rate"
                 value={m.attempts ? `${Math.round((100 * m.passedAttempts) / m.attempts)}%` : "—"}

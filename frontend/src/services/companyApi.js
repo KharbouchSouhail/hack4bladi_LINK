@@ -3,6 +3,7 @@
 import { APPLICATION_STATUSES } from "../domain/constants.js";
 import { buildContext } from "../domain/evidence.js";
 import { applicationDetail, applicationRow, changeApplicationStatus, saveJob, saveProfile, setJobStatus } from "./shared.js";
+import * as recruitment from "./recruitment.js";
 import { findOr404, getDb, logActivity, lookups, mutate, newId, request, requireRole, validate } from "./core.js";
 import { AccessError, ValidationError } from "./errors.js";
 
@@ -85,8 +86,11 @@ export function getOverview() {
         totalApplications: apps.length,
         awaitingReview: apps.filter((a) => a.status === "submitted").length,
         meetingCriteria: rows.filter((r) => r.eligibility === "eligible").length,
-        shortlisted: apps.filter((a) => ["shortlisted", "interview"].includes(a.status)).length,
+        shortlisted: apps.filter((a) => ["shortlisted", "interview_scheduled", "interview_completed"].includes(a.status)).length,
+        offers: apps.filter((a) => a.status === "offer_extended").length,
+        hired: apps.filter((a) => a.status === "hired").length,
       },
+      upcomingInterviews: interviewRows(db, db.interviews.filter((i) => i.companyId === company.id && i.status === "scheduled")).slice(0, 4),
       statusCounts,
       attention: jobs
         .filter((j) => j.status === "published")
@@ -185,11 +189,97 @@ export function getApplication(appId) {
   });
 }
 
+// The company acting, as recorded in histories and notifications.
+function actor(company) {
+  return { role: "company", name: company.name };
+}
+
+// Every recruitment action first proves the application belongs to one of this company's jobs.
+function ownApp(company, appId) {
+  return findOr404(ownApplications(getDb(), company), appId, "Application");
+}
+
+function ownInterview(company, interviewId) {
+  const interview = findOr404(getDb().interviews, interviewId, "Interview");
+  ownApp(company, interview.applicationId);
+  return interview;
+}
+
 export function updateApplicationStatus(appId, status, note) {
   return request(() => {
     const company = currentCompany();
-    findOr404(ownApplications(getDb(), company), appId, "Application");
-    mutate((draft) => changeApplicationStatus(draft, appId, status, note));
+    ownApp(company, appId);
+    mutate((draft) => changeApplicationStatus(draft, appId, status, note, actor(company)));
+  });
+}
+
+export function scheduleInterview(appId, input) {
+  return request(() => {
+    const company = currentCompany();
+    ownApp(company, appId);
+    return mutate((draft) => recruitment.scheduleInterview(draft, appId, input, actor(company)));
+  });
+}
+
+export function rescheduleInterview(interviewId, input) {
+  return request(() => {
+    const company = currentCompany();
+    ownInterview(company, interviewId);
+    return mutate((draft) => recruitment.rescheduleInterview(draft, interviewId, input, actor(company)));
+  });
+}
+
+export function cancelInterview(interviewId, reason) {
+  return request(() => {
+    const company = currentCompany();
+    ownInterview(company, interviewId);
+    return mutate((draft) => recruitment.cancelInterview(draft, interviewId, reason, actor(company)));
+  });
+}
+
+export function completeInterview(interviewId, feedback) {
+  return request(() => {
+    const company = currentCompany();
+    ownInterview(company, interviewId);
+    return mutate((draft) => recruitment.completeInterview(draft, interviewId, feedback, actor(company)));
+  });
+}
+
+export function extendOffer(appId, input) {
+  return request(() => {
+    const company = currentCompany();
+    ownApp(company, appId);
+    return mutate((draft) => recruitment.extendOffer(draft, appId, input, actor(company)));
+  });
+}
+
+export function confirmHire(appId, input) {
+  return request(() => {
+    const company = currentCompany();
+    ownApp(company, appId);
+    // Returned without commission figures: those are only visible to administrators.
+    const { commission: _commission, ...placement } = mutate((draft) => recruitment.confirmHire(draft, appId, input, actor(company)));
+    return placement;
+  });
+}
+
+function interviewRows(db, interviews) {
+  const map = lookups(db);
+  return interviews
+    .map((i) => ({
+      ...i,
+      candidateName: map.candidates[i.candidateId]?.name,
+      jobTitle: map.jobs[i.jobId]?.title,
+      companyName: map.companies[i.companyId]?.name,
+    }))
+    .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
+}
+
+export function listInterviews() {
+  return request(() => {
+    const company = currentCompany();
+    const db = getDb();
+    return interviewRows(db, db.interviews.filter((i) => i.companyId === company.id));
   });
 }
 

@@ -35,6 +35,33 @@ candidate's highest-priority gaps. Free jobs are those already applied to, then 
 only as a count. Search, filters, paging arguments and direct URLs can't reach them: `getCourse`,
 `setLessonComplete` and `getJob` reject them.
 
+## Recruitment workflow
+
+Applications move through `Applied → Under review → Shortlisted → Interview scheduled → Interview completed →
+Offer extended → Hired`, or `Rejected` from any open stage. The allowed moves live in `src/domain/recruitment.js`;
+the operations are in `src/services/recruitment.js`, wrapped by `companyApi.js` (own jobs only) and `adminApi.js`.
+Only "Under review", "Shortlisted" and "Rejected" are plain status changes. The other stages are reached by an
+action that records the matching data: scheduling an interview, completing it with private feedback, extending
+an offer, or confirming the hire. Confirming the hire creates the application's single placement.
+
+- **Interviews** store the start time in UTC with the IANA time zone it was scheduled in. They can't be scheduled
+  in the past or completed before they start. Cancelling one moves the application back a stage, and rejecting an
+  application cancels its scheduled interview and withdraws any open offer.
+- **Privacy**: candidates receive an allow-listed view. It never includes feedback, internal notes, recruiter
+  names or commission figures. Companies only see the candidate data each applicant agreed to share.
+- **Notifications** are stored records with a type and links to the application or interview. Users can only read
+  or mark their own.
+- **Demo meeting links**: "Demo link" generates a room on `VITE_DEMO_MEETING_URL` (default `https://meet.jit.si/`),
+  and candidates see it labelled as a demo. There is no integrated video service.
+- **Placements and commission** (`/admin/placements`): administrators choose a percentage of a reference amount
+  (the offer's annual salary, or a default) or a fixed fee. Each placement keeps a snapshot of the calculation.
+  All amounts are demonstration figures: nothing is invoiced or paid.
+
+Demo flow: as `yassine jahjah`, switch to Max, pass the Python and SQL tests and apply to *Junior Data Scientist*.
+As `atlas`, shortlist and schedule an interview from the candidate's page. An interview can be marked completed
+once its start time has passed, so schedule it a minute or two ahead. Then extend an offer and confirm the hire.
+As `root`, open Placements.
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

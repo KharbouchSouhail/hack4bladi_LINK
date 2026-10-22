@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, ChevronDown, FlaskConical, LogOut, Menu, Settings, X } from "lucide-react";
+import { Bell, CheckCheck, ChevronDown, FlaskConical, LogOut, Menu, Settings, X } from "lucide-react";
 import { getSession, logout } from "../auth/auth.js";
 import { LogoOnLight } from "../components/Logo.jsx";
-import { useQuery } from "../hooks/useQuery.js";
+import NotificationList from "../components/NotificationList.jsx";
+import { useAction, useQuery } from "../hooks/useQuery.js";
 import { useScrollReveal } from "../hooks/useScrollReveal.js";
-import { formatRelative, initials } from "../lib/format.js";
+import { initials } from "../lib/format.js";
 import { getNotifications, markNotificationsRead } from "../services/core.js";
 
 // Closes a popover on outside click or Escape.
@@ -26,53 +27,50 @@ function useDismiss(ref, open, onClose) {
 const ICON_BUTTON =
   "relative flex h-10 w-10 items-center justify-center rounded-control text-gray-600 transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-accent-500";
 
-function Notifications() {
+function Notifications({ notificationsPath }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const navigate = useNavigate();
   const query = useQuery(getNotifications);
-  const items = query.data ?? [];
-  const unread = items.filter((n) => !n.read).length;
+  const [run, pending] = useAction();
+  const items = query.data?.items ?? [];
+  const unread = query.data?.unread ?? 0;
   useDismiss(ref, open, () => setOpen(false));
-
-  function toggle() {
-    setOpen((o) => !o);
-    if (!open && unread) markNotificationsRead();
-  }
 
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={toggle} aria-expanded={open} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} className={ICON_BUTTON}>
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} className={ICON_BUTTON}>
         <Bell size={18} strokeWidth={1.8} />
-        {unread > 0 && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-error ring-2 ring-white" />}
+        {unread > 0 && (
+          <span aria-hidden="true" className="absolute top-1 right-1 flex h-4 min-w-4 animate-pop-in items-center justify-center rounded-full bg-error px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-white tabular-nums">
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] origin-top-right animate-pop-in rounded-lg border border-gray-200 bg-white shadow-dropdown">
-          <p className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-900">Notifications</p>
+        <div className="absolute right-0 z-40 mt-2 w-[min(24rem,calc(100vw-2rem))] origin-top-right animate-pop-in rounded-lg border border-gray-200 bg-white shadow-dropdown">
+          <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-2.5">
+            <p className="text-sm font-semibold text-gray-900">
+              Notifications {unread > 0 && <span className="font-normal text-gray-500">· {unread} unread</span>}
+            </p>
+            {unread > 0 && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => run(markNotificationsRead)}
+                className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-xs font-medium text-accent-600 hover:bg-accent-50 focus-visible:outline-2 focus-visible:outline-accent-500 disabled:opacity-60"
+              >
+                <CheckCheck aria-hidden="true" size={14} /> Mark all as read
+              </button>
+            )}
+          </div>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-center text-[13px] text-gray-500">You're all caught up.</p>
           ) : (
-            <ul className="max-h-80 overflow-y-auto">
-              {items.map((n) => (
-                <li key={n.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      if (n.link) navigate(n.link);
-                    }}
-                    className="flex w-full gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-gray-50 focus-visible:bg-accent-50 focus-visible:outline-none"
-                  >
-                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read ? "bg-transparent" : "bg-accent-600"}`} />
-                    <span>
-                      <span className="block text-[13px] text-gray-800">{n.text}</span>
-                      <span className="text-[11px] text-gray-500">{formatRelative(n.at)}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <NotificationList items={items.slice(0, 8)} dense onNavigate={() => setOpen(false)} />
           )}
+          <Link to={notificationsPath} onClick={() => setOpen(false)} className="block border-t border-gray-100 px-4 py-2.5 text-center text-xs font-semibold text-accent-600 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-accent-500">
+            View all notifications
+          </Link>
         </div>
       )}
     </div>
@@ -158,14 +156,16 @@ function SidebarNav({ sections, onNavigate }) {
 }
 
 // One shell for the three roles; each passes its own navigation and optional topbar extras.
-export default function DashboardLayout({ sections, roleLabel, settingsPath, topbarExtra }) {
+export default function DashboardLayout({ sections, roleLabel, settingsPath, notificationsPath, topbarExtra }) {
   const session = getSession();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const mainRef = useRef(null);
   useScrollReveal(mainRef);
   const items = sections.flatMap((s) => s.items);
-  const current = items.filter((i) => pathname.startsWith(i.to)).sort((a, b) => b.to.length - a.to.length)[0];
+  const current =
+    items.filter((i) => pathname.startsWith(i.to)).sort((a, b) => b.to.length - a.to.length)[0] ??
+    (pathname.startsWith(notificationsPath) ? { label: "Notifications" } : undefined);
 
   const sidebar = (
     <>
@@ -214,7 +214,7 @@ export default function DashboardLayout({ sections, roleLabel, settingsPath, top
             <span className="font-semibold text-gray-900">{current?.label ?? "Page"}</span>
           </p>
           {topbarExtra}
-          <Notifications />
+          <Notifications notificationsPath={notificationsPath} />
           <ProfileMenu session={session} settingsPath={settingsPath} roleLabel={roleLabel} />
         </header>
         {/* Clipped sideways so content sliding in from the edge never adds a horizontal scrollbar. */}

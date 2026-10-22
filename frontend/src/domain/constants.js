@@ -28,13 +28,16 @@ export const IMPORTANCE = {
 };
 
 // Application statuses are the employer's workflow, not platform hiring decisions.
+// Allowed moves between them live in domain/recruitment.js.
 export const APPLICATION_STATUSES = {
-  submitted: { label: "Submitted", tone: "neutral" },
+  submitted: { label: "Applied", tone: "neutral" },
   under_review: { label: "Under review", tone: "info" },
   shortlisted: { label: "Shortlisted", tone: "accent" },
-  interview: { label: "Interview", tone: "warning" },
-  rejected: { label: "Rejected", tone: "error" },
+  interview_scheduled: { label: "Interview scheduled", tone: "warning" },
+  interview_completed: { label: "Interview completed", tone: "cyan" },
+  offer_extended: { label: "Offer extended", tone: "accent" },
   hired: { label: "Hired", tone: "success" },
+  rejected: { label: "Rejected", tone: "error" },
 };
 
 export const REQUIREMENT_RULES = {

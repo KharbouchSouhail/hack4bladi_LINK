@@ -36,3 +36,18 @@ export function youtubeId(url = "") {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
   return match ? match[1] : null;
 }
+
+// Date and time of an instant as seen in `timeZone` (defaults to the viewer's own zone).
+export function formatDateTime(iso, timeZone) {
+  return iso
+    ? new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(new Date(iso))
+    : "—";
+}
+
+export function formatTime(iso, timeZone) {
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone }).format(new Date(iso));
+}
+
+export function viewerTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}

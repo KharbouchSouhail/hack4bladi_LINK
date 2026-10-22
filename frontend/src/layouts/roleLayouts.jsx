@@ -4,11 +4,13 @@ import {
   BookOpen,
   Briefcase,
   Building2,
+  CalendarClock,
   ClipboardCheck,
   CreditCard,
   FileSearch,
   FileText,
   GraduationCap,
+  Handshake,
   KanbanSquare,
   LayoutDashboard,
   Library,
@@ -69,6 +71,7 @@ const COMPANY_NAV = [
       { to: "/company/jobs", label: "Job Listings", icon: Briefcase },
       { to: "/company/candidates", label: "Candidate Pipeline", icon: Users },
       { to: "/company/applications", label: "Applications", icon: KanbanSquare },
+      { to: "/company/interviews", label: "Interviews", icon: CalendarClock },
       { to: "/company/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
@@ -105,6 +108,8 @@ const ADMIN_NAV = [
     items: [
       { to: "/admin/jobs", label: "Job Listings", icon: Briefcase },
       { to: "/admin/applications", label: "Applications", icon: FileText },
+      { to: "/admin/interviews", label: "Interviews", icon: CalendarClock },
+      { to: "/admin/placements", label: "Placements", icon: Handshake },
     ],
   },
   { label: "System", items: [{ to: "/admin/settings", label: "Settings", icon: UserCog }] },
@@ -123,13 +128,13 @@ function PlanBadge() {
 }
 
 export function CandidateLayout() {
-  return <DashboardLayout sections={CANDIDATE_NAV} roleLabel="Candidate" settingsPath="/candidate/settings" topbarExtra={<PlanBadge />} />;
+  return <DashboardLayout sections={CANDIDATE_NAV} roleLabel="Candidate" settingsPath="/candidate/settings" notificationsPath="/candidate/notifications" topbarExtra={<PlanBadge />} />;
 }
 
 export function CompanyLayout() {
-  return <DashboardLayout sections={COMPANY_NAV} roleLabel="Company" settingsPath="/company/settings" />;
+  return <DashboardLayout sections={COMPANY_NAV} roleLabel="Company" settingsPath="/company/settings" notificationsPath="/company/notifications" />;
 }
 
 export function AdminLayout() {
-  return <DashboardLayout sections={ADMIN_NAV} roleLabel="Admin" settingsPath="/admin/settings" />;
+  return <DashboardLayout sections={ADMIN_NAV} roleLabel="Admin" settingsPath="/admin/settings" notificationsPath="/admin/notifications" />;
 }

@@ -75,7 +75,7 @@ function ApplyPanel({ job }) {
       <Card title="Your application">
         <StatusBadge map={APPLICATION_STATUSES} value={job.application.status} />
         <p className="mt-2 text-xs text-gray-500">Submitted {formatDate(job.application.createdAt)}</p>
-        <Link to="/candidate/applications" className={buttonClasses("secondary", "mt-3 w-full", "sm")}>Track application</Link>
+        <Link to={`/candidate/applications/${job.application.id}`} className={buttonClasses("secondary", "mt-3 w-full", "sm")}>Track application</Link>
       </Card>
     );
   }

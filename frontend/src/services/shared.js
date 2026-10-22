@@ -1,9 +1,10 @@
 // Logic shared by the company and admin APIs: validation, saves and the application view.
-import { APPLICATION_STATUSES, EMPLOYMENT_TYPES, WORK_MODES } from "../domain/constants.js";
+import { EMPLOYMENT_TYPES, WORK_MODES } from "../domain/constants.js";
 import { checkEligibility } from "../domain/eligibility.js";
 import { buildContext, courseProgress, SKILL_STATES } from "../domain/evidence.js";
 import { computeMatch } from "../domain/scoring.js";
-import { findOr404, logActivity, lookups, newId, notify, validate } from "./core.js";
+import { findOr404, logActivity, lookups, newId, validate } from "./core.js";
+import { changeStage, nextActions } from "./recruitment.js";
 import { ValidationError } from "./errors.js";
 
 function trimmed(value) {
@@ -106,24 +107,9 @@ export function setJobStatus(draft, jobId, status) {
   return job;
 }
 
-export function changeApplicationStatus(draft, appId, status, note) {
-  if (!APPLICATION_STATUSES[status]) throw new ValidationError({ status: "Choose a status." });
-  const app = findOr404(draft.applications, appId, "Application");
-  const job = draft.jobs.find((j) => j.id === app.jobId);
-  const candidate = draft.candidates.find((c) => c.id === app.candidateId);
-  const now = new Date().toISOString();
-
-  app.status = status;
-  app.updatedAt = now;
-  app.history.push({ status, at: now, note: trimmed(note) });
-  notify(
-    draft,
-    `candidate:${app.candidateId}`,
-    `Your application for ${job.title} is now “${APPLICATION_STATUSES[status].label}”.`,
-    "/candidate/applications",
-  );
-  logActivity(draft, `${candidate.name}'s application for ${job.title} moved to ${APPLICATION_STATUSES[status].label}`);
-  return app;
+// Plain stage changes, validated against the workflow (see services/recruitment.js).
+export function changeApplicationStatus(draft, appId, status, note, actor) {
+  return changeStage(draft, appId, status, note, actor);
 }
 
 function skillName(map, id) {
@@ -154,11 +140,13 @@ export function applicationRow(db, app, { respectConsent }) {
       ? job.requirements.map((r) => ({ skillId: r.skillId, name: skillName(map, r.skillId), passed: ctx.passed.has(r.skillId) }))
       : [],
     skillIds: sharesEvidence ? [...new Set([...candidate.evidence.map((e) => e.skillId), ...ctx.passed])] : [],
+    nextInterviewAt: db.interviews.find((i) => i.applicationId === app.id && i.status === "scheduled")?.scheduledAt ?? null,
   };
 }
 
 // Full candidate view. Companies only receive the sections the candidate consented to share.
-export function applicationDetail(db, app, { respectConsent }) {
+// Commission figures are only included for administrators (`includeCommission`).
+export function applicationDetail(db, app, { respectConsent, includeCommission = false }) {
   const map = lookups(db);
   const job = map.jobs[app.jobId];
   const candidate = map.candidates[app.candidateId];
@@ -190,10 +178,20 @@ export function applicationDetail(db, app, { respectConsent }) {
           .map((a) => ({ ...a, title: map.tests[a.testId]?.title, skillName: skillName(map, map.tests[a.testId]?.skillId) }))
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       : null,
+    interviews: db.interviews.filter((i) => i.applicationId === app.id).sort((a, b) => b.scheduledAt.localeCompare(a.scheduledAt)),
+    offer: app.offer ?? null,
+    placement: placementSummary(db.placements.find((p) => p.applicationId === app.id), includeCommission),
+    actions: nextActions(db, app),
     learning: shares("learning")
       ? db.courses
           .filter((c) => ctx.progressByCourse[c.id])
           .map((c) => ({ id: c.id, title: c.title, skillName: skillName(map, c.skillId), progress: courseProgress(c, ctx.progressByCourse) }))
       : null,
   };
+}
+
+function placementSummary(placement, includeCommission) {
+  if (!placement) return null;
+  const { commission: _commission, ...rest } = placement;
+  return includeCommission ? placement : rest;
 }

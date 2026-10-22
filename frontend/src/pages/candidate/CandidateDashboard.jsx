@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, BadgeCheck, Briefcase, FileSearch, FileUp, Info, RefreshCw, Route, Target } from "lucide-react";
+import { ArrowRight, BadgeCheck, Briefcase, CalendarClock, FileSearch, FileUp, Info, RefreshCw, Route, Target } from "lucide-react";
 import Button, { buttonClasses } from "../../components/Button.jsx";
 import { JobCard, LearningCard, ResumeUploadDialog, SkillStateBadge, TargetRoleDialog } from "../../components/candidate/shared.jsx";
+import { ApplicationStatusBadge, JoinInterviewButton, StageTracker } from "../../components/recruitment/shared.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Card from "../../components/ui/Card.jsx";
 import { ScoreRing } from "../../components/ui/Progress.jsx";
 import { EmptyState, ErrorState, LoadingState, QueryBoundary, UpgradeCard } from "../../components/ui/states.jsx";
 import { useAction, useQuery } from "../../hooks/useQuery.js";
-import { formatDate, formatRelative, plural } from "../../lib/format.js";
-import { getAssessment, getLearningPath, getMe, listJobs, listTests, reanalyze } from "../../services/candidateApi.js";
+import { formatDate, formatDateTime, formatRelative, plural } from "../../lib/format.js";
+import { getAssessment, getLearningPath, getMe, listJobs, listMyApplications, listTests, reanalyze } from "../../services/candidateApi.js";
 
 function QuickActions({ hasResume, onUpload }) {
   const navigate = useNavigate();
@@ -225,6 +226,62 @@ function ValidationSection() {
   );
 }
 
+// Where each application stands, with the next interview first. Hidden until the candidate applies.
+function RecruitmentSection() {
+  const query = useQuery(listMyApplications);
+  const apps = query.data ?? [];
+  if (apps.length === 0) return null;
+  const next = apps
+    .filter((a) => a.nextInterview)
+    .map((a) => ({ ...a.nextInterview, app: a }))
+    .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))[0];
+
+  return (
+    <Card
+      title="Recruitment progress"
+      description="From application to hire, as recorded by each employer."
+      action={<Link to="/candidate/applications" className={buttonClasses("secondary", "", "xs")}>My applications</Link>}
+      bodyClassName=""
+    >
+      {next && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-accent-50/40 px-5 py-4">
+          <div className="flex items-start gap-2.5">
+            <CalendarClock aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-accent-600" />
+            <div>
+              <p className="text-[11px] font-semibold tracking-wide text-accent-700 uppercase">Next interview</p>
+              <p className="text-[13px] font-medium text-gray-900">
+                {next.app.job.title} · {next.app.companyName}
+              </p>
+              <p className="text-xs text-gray-500">
+                {formatDateTime(next.scheduledAt, next.timeZone)} ({next.timeZone}) · {formatRelative(next.scheduledAt)}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Link to={`/candidate/applications/${next.app.id}`} className={buttonClasses("secondary", "", "xs")}>
+              Details
+            </Link>
+            <JoinInterviewButton interview={next} size="xs" />
+          </div>
+        </div>
+      )}
+      <ul className="divide-y divide-gray-100">
+        {apps.slice(0, 4).map((a) => (
+          <li key={a.id} className="grid gap-3 px-5 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] sm:items-center">
+            <div className="flex min-w-0 items-center justify-between gap-2">
+              <Link to={`/candidate/applications/${a.id}`} className="min-w-0 truncate text-[13px] font-medium text-gray-900 hover:underline">
+                {a.job.title} <span className="font-normal text-gray-500">· {a.companyName}</span>
+              </Link>
+              <ApplicationStatusBadge status={a.status} />
+            </div>
+            <StageTracker status={a.status} history={a.history} compact />
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 function JobsSection() {
   const query = useQuery(listJobs);
   return (
@@ -311,6 +368,7 @@ export default function CandidateDashboard() {
         </>
       )}
 
+      <RecruitmentSection />
       <LearningSection />
       <JobsSection />
 
