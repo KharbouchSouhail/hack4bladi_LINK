@@ -37,7 +37,7 @@ function ApplyDialog({ job, open, onClose }) {
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" size="sm" type="submit" form="apply-form" disabled={pending}>
+          <Button loading={pending} variant="solid" size="sm" type="submit" form="apply-form" disabled={pending}>
             {pending ? "Sending…" : "Submit application"}
           </Button>
         </>

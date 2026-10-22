@@ -92,6 +92,94 @@
   --shadow-card-hover: 0 12px 28px rgba(98, 125, 245, 0.14);
   --shadow-dropdown: 0 12px 32px rgba(41, 45, 62, 0.12);
   --shadow-modal: 0 24px 64px rgba(41, 45, 62, 0.18);
+
+  /* Motion, after Material 3: "standard" for small state changes, "emphasized" for things entering the screen.
+     Micro-interactions 150–200 ms, entrances and dialogs 220–320 ms. Only opacity and transform are animated. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+
+  /* "backwards" so no transform is left behind once an entrance ends (a transform would trap fixed children). */
+  --animate-enter: enter 320ms var(--ease-emphasized) backwards;
+  --animate-fade-in: fade-in 200ms var(--ease-standard) backwards;
+  --animate-pop-in: pop-in 180ms var(--ease-emphasized) backwards;
+  --animate-slide-in-left: slide-in-left 260ms var(--ease-emphasized) backwards;
+  --animate-indeterminate: indeterminate 1.4s var(--ease-standard) infinite;
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+  }
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes indeterminate {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(250%);
+    }
+  }
+}
+
+/* Children enter one after another, 40 ms apart, capped so long lists never make anyone wait. */
+@utility stagger {
+  & > * {
+    animation: enter 320ms var(--ease-emphasized) backwards;
+  }
+  & > :nth-child(2) {
+    animation-delay: 40ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 80ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 120ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 160ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 200ms;
+  }
+  & > :nth-child(n + 7) {
+    animation-delay: 240ms;
+  }
+}
+
+/* Clickable cards: a slight lift and a deeper shadow on hover, settling back when pressed. */
+@utility card-interactive {
+  transition:
+    transform 200ms var(--ease-standard),
+    box-shadow 200ms var(--ease-standard),
+    border-color 200ms var(--ease-standard),
+    background-color 200ms var(--ease-standard);
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+    }
+  }
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+    transition-duration: 80ms;
+  }
 }
 
 /* Gradients from the reference, for hero areas and decorative accents only. */
@@ -111,11 +199,32 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Native <dialog>: fade the backdrop and lift the panel in. */
+dialog[open] {
+  animation: pop-in 220ms var(--ease-emphasized);
+}
+dialog[open]::backdrop {
+  animation: fade-in 220ms var(--ease-standard);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
-  *::after {
+  *::after,
+  dialog::backdrop {
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* A still bar instead of a sweeping one; the step labels carry the progress. */
+  .animate-indeterminate {
+    animation: none !important;
+  }
+  /* Nothing moves; hover feedback stays as the shadow change only. */
+  .card-interactive:hover,
+  .card-interactive:active {
+    transform: none !important;
   }
 }

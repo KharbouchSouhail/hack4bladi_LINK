@@ -54,7 +54,7 @@ export default function CompanyDashboard() {
             </div>
           </section>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile label="Active job listings" value={stats.publishedJobs} hint={`${stats.draftJobs} in draft`} icon={Briefcase} />
             <StatTile label="Total applications" value={stats.totalApplications} hint={`${stats.awaitingReview} awaiting review`} icon={Inbox} />
             <StatTile label="Meeting job requirements" value={stats.meetingCriteria} hint="Based on configured eligibility rules" icon={BadgeCheck} />

@@ -125,7 +125,7 @@ export default function LearningPage() {
                   </UpgradeCard>
                 </Card>
               )}
-              <ol className="space-y-4">
+              <ol className="stagger space-y-4">
                 {path.modules.map((m, i) => (
                   <Module key={m.skillId} module={m} index={i} locked={path.contentLocked} />
                 ))}

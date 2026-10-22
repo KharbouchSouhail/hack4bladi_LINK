@@ -41,7 +41,7 @@ function CourseDialog({ course, skills, onClose }) {
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" size="sm" type="submit" form="course-form" disabled={pending}>{pending ? "Saving…" : "Save course"}</Button>
+          <Button loading={pending} variant="solid" size="sm" type="submit" form="course-form" disabled={pending}>{pending ? "Saving…" : "Save course"}</Button>
         </>
       }
     >

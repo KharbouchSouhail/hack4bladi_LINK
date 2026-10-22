@@ -18,7 +18,7 @@ export function GapCard({ gap }) {
   return (
     <Link
       to={`/candidate/skill-gaps/${gap.skillId}`}
-      className="group flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-subtle transition duration-200 hover:border-accent-200 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+      className="group flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-subtle card-interactive hover:border-accent-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <GapPriorityBadge priority={gap.priority} />
@@ -34,7 +34,7 @@ export function GapCard({ gap }) {
         </p>
       )}
       <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-accent-600 group-hover:underline">
-        View learning resources <ArrowRight aria-hidden="true" size={14} />
+        View learning resources <ArrowRight aria-hidden="true" size={14} className="transition-transform duration-200 ease-standard group-hover:translate-x-0.5" />
       </span>
     </Link>
   );

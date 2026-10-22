@@ -38,7 +38,7 @@ function CompanyDialog({ company, onClose }) {
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" size="sm" type="submit" form="company-form" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+          <Button loading={pending} variant="solid" size="sm" type="submit" form="company-form" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
         </>
       }
     >

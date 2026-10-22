@@ -112,7 +112,7 @@ function Editor({ test, skills }) {
           </div>
         </Card>
         <div className="flex flex-wrap gap-2">
-          <Button type="submit" variant="solid" size="sm" disabled={pending}>{pending ? "Saving…" : "Save test"}</Button>
+          <Button loading={pending} type="submit" variant="solid" size="sm" disabled={pending}>{pending ? "Saving…" : "Save test"}</Button>
           <Button variant="secondary" size="sm" className="xl:hidden" onClick={() => setPreview((p) => !p)}>
             <Eye aria-hidden="true" size={16} /> {preview ? "Hide preview" : "Preview"}
           </Button>

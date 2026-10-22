@@ -160,7 +160,7 @@ export default function AssessmentsPage() {
               </EmptyState>
             </Card>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div className="stagger grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
               <div className="space-y-6">
                 <Card title="Assessment summary">
                   <div className="flex items-center gap-5">

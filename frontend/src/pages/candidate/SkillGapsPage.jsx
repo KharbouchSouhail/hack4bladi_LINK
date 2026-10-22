@@ -145,7 +145,7 @@ function GapsContent({ data, onUpload }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="stagger space-y-6">
       <Summary data={data} />
 
       {data.total === 0 ? (
@@ -169,7 +169,7 @@ function GapsContent({ data, onUpload }) {
               </Badge>
             )}
           </div>
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {data.gaps.map((g) => (
               <li key={g.skillId}>
                 <GapCard gap={g} />

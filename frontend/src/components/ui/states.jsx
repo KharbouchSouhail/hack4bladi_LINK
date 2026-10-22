@@ -16,7 +16,7 @@ export function LoadingState({ rows = 3, label = "Loading" }) {
 
 export function EmptyState({ icon: Icon = Inbox, title, children, action }) {
   return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
+    <div className="flex animate-fade-in flex-col items-center px-6 py-10 text-center">
       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500">
         <Icon aria-hidden="true" size={20} strokeWidth={1.8} />
       </span>
@@ -72,5 +72,6 @@ export function ErrorState({ error, onRetry, upgradeText }) {
 export function QueryBoundary({ query, children, rows, upgradeText }) {
   if (query.loading) return <LoadingState rows={rows} />;
   if (query.error) return <ErrorState error={query.error} onRetry={query.reload} upgradeText={upgradeText} />;
-  return children(query.data);
+  // Fades in once when data first arrives; background refreshes keep it mounted, so nothing flickers.
+  return <div className="animate-fade-in">{children(query.data)}</div>;
 }

@@ -88,7 +88,7 @@ export default function TestRunner({ test, onSubmit, pending, result, onRetry, s
             Try again
           </Button>
         ) : (
-          <Button variant="solid" size="sm" type="submit" disabled={pending}>
+          <Button loading={pending} variant="solid" size="sm" type="submit" disabled={pending}>
             {pending ? "Grading…" : submitLabel}
           </Button>
         )}

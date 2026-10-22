@@ -161,7 +161,7 @@ function SkillDetail({ d }) {
                   </UpgradeCard>
                 </Card>
               )}
-              <ol className="space-y-4">
+              <ol className="stagger space-y-4">
                 {d.courses.map((c, i) => (
                   <CourseItem key={c.id} course={c} step={i + 1} unlocked={c.accessible} />
                 ))}

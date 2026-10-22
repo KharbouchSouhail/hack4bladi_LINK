@@ -23,7 +23,7 @@ function useDismiss(ref, open, onClose) {
 }
 
 const ICON_BUTTON =
-  "relative flex h-10 w-10 items-center justify-center rounded-control text-gray-600 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-accent-500";
+  "relative flex h-10 w-10 items-center justify-center rounded-control text-gray-600 transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-accent-500";
 
 function Notifications() {
   const [open, setOpen] = useState(false);
@@ -46,7 +46,7 @@ function Notifications() {
         {unread > 0 && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-error ring-2 ring-white" />}
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-lg border border-gray-200 bg-white shadow-dropdown">
+        <div className="absolute right-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] origin-top-right animate-pop-in rounded-lg border border-gray-200 bg-white shadow-dropdown">
           <p className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-900">Notifications</p>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-center text-[13px] text-gray-500">You're all caught up.</p>
@@ -60,7 +60,7 @@ function Notifications() {
                       setOpen(false);
                       if (n.link) navigate(n.link);
                     }}
-                    className="flex w-full gap-3 px-4 py-3 text-left hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
+                    className="flex w-full gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-gray-50 focus-visible:bg-accent-50 focus-visible:outline-none"
                   >
                     <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read ? "bg-transparent" : "bg-accent-600"}`} />
                     <span>
@@ -96,22 +96,22 @@ function ProfileMenu({ session, settingsPath, roleLabel }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex h-10 items-center gap-2 rounded-control pr-1.5 pl-1 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-accent-500"
+        className="flex h-10 items-center gap-2 rounded-control pr-1.5 pl-1 transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-2 focus-visible:outline-accent-500"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-100 text-xs font-semibold text-accent-700">{initials(session.name)}</span>
         <span className="hidden max-w-[10rem] truncate text-[13px] font-medium text-gray-800 sm:block">{session.name}</span>
-        <ChevronDown aria-hidden="true" size={16} className="text-gray-500" />
+        <ChevronDown aria-hidden="true" size={16} className={`text-gray-500 transition-transform duration-200 ease-standard ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 z-40 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-dropdown">
+        <div role="menu" className="absolute right-0 z-40 mt-2 w-56 origin-top-right animate-pop-in rounded-lg border border-gray-200 bg-white py-1 shadow-dropdown">
           <div className="border-b border-gray-100 px-4 py-2.5">
             <p className="truncate text-[13px] font-semibold text-gray-900">{session.name}</p>
             <p className="text-xs text-gray-500">{roleLabel}</p>
           </div>
-          <Link role="menuitem" to={settingsPath} onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50">
+          <Link role="menuitem" to={settingsPath} onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 transition-colors duration-150 hover:bg-gray-50 focus-visible:bg-accent-50 focus-visible:outline-none">
             <Settings aria-hidden="true" size={16} strokeWidth={1.8} /> Settings
           </Link>
-          <button role="menuitem" type="button" onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50">
+          <button role="menuitem" type="button" onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 transition-colors duration-150 hover:bg-gray-50 focus-visible:bg-accent-50 focus-visible:outline-none">
             <LogOut aria-hidden="true" size={16} strokeWidth={1.8} /> Sign out
           </button>
         </div>
@@ -186,8 +186,8 @@ export default function DashboardLayout({ sections, roleLabel, settingsPath, top
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-navy-950/50" />
-          <aside className="relative flex h-full w-72 max-w-[85%] flex-col bg-white pt-[env(safe-area-inset-top,0px)] shadow-modal">
+          <button type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 animate-fade-in bg-navy-950/50" />
+          <aside className="relative flex h-full w-72 max-w-[85%] animate-slide-in-left flex-col bg-white pt-[env(safe-area-inset-top,0px)] shadow-modal">
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
@@ -215,7 +215,10 @@ export default function DashboardLayout({ sections, roleLabel, settingsPath, top
           <ProfileMenu session={session} settingsPath={settingsPath} roleLabel={roleLabel} />
         </header>
         <main className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 lg:py-8">
-          <Outlet />
+          {/* Keyed by path so each page fades up as it opens; it never delays the content. */}
+          <div key={pathname} className="animate-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

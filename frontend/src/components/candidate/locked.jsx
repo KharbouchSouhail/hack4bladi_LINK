@@ -12,7 +12,7 @@ export function LockedCard({ title, hint, label, onClick }) {
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="relative flex h-full min-h-44 w-full flex-col overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-25 p-4 text-left transition duration-200 hover:border-accent-300 hover:bg-accent-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+      className="group relative flex h-full min-h-44 w-full flex-col overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-25 p-4 text-left card-interactive hover:border-accent-300 hover:bg-accent-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
     >
       <div aria-hidden="true" className="space-y-2 blur-[3px] select-none">
         <div className="flex gap-1.5">
@@ -24,7 +24,7 @@ export function LockedCard({ title, hint, label, onClick }) {
         <span className="block h-3 w-4/5 rounded bg-gray-200" />
       </div>
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-4 text-center">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-accent-600 shadow-subtle ring-1 ring-accent-100">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-accent-600 shadow-subtle ring-1 ring-accent-100 transition duration-200 ease-standard group-hover:-translate-y-0.5 group-hover:ring-accent-300">
           <Lock aria-hidden="true" size={16} />
         </span>
         <span className="text-[13px] font-semibold text-gray-900">{title}</span>

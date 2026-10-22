@@ -35,7 +35,7 @@ function StatusForm({ detail, onStatusChange }) {
     <form onSubmit={submit} className="space-y-3">
       <Select label="Application status" value={status} onChange={(e) => setStatus(e.target.value)} options={Object.entries(APPLICATION_STATUSES).map(([value, s]) => ({ value, label: s.label }))} />
       <Textarea label="Internal note (optional)" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
-      <Button type="submit" variant="solid" size="sm" className="w-full" disabled={pending || status === detail.status}>
+      <Button loading={pending} type="submit" variant="solid" size="sm" className="w-full" disabled={pending || status === detail.status}>
         {pending ? "Updating…" : "Update status"}
       </Button>
       <p className="text-[11px] text-gray-500">The candidate is notified. Hiring decisions are always yours; Link only records them.</p>

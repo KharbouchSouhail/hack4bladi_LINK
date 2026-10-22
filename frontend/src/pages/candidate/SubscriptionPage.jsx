@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Check, FlaskConical } from "lucide-react";
 import Button from "../../components/Button.jsx";
 import Badge from "../../components/ui/Badge.jsx";
@@ -10,6 +11,7 @@ import { getMe, setPlan } from "../../services/candidateApi.js";
 export default function SubscriptionPage() {
   const query = useQuery(getMe);
   const [run, pending] = useAction();
+  const [switching, setSwitching] = useState(null);
 
   return (
     <div>
@@ -20,7 +22,7 @@ export default function SubscriptionPage() {
       </p>
       <QueryBoundary query={query} rows={4}>
         {(me) => (
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="stagger grid gap-4 md:grid-cols-3">
             {PLAN_ORDER.map((key) => {
               const plan = PLANS[key];
               const current = me.plan === key;
@@ -28,7 +30,7 @@ export default function SubscriptionPage() {
                 <section
                   key={key}
                   aria-label={`${plan.label} plan`}
-                  className={`flex flex-col rounded-lg border bg-white p-5 shadow-subtle ${current ? "border-accent-500 ring-1 ring-accent-500" : "border-gray-200"}`}
+                  className={`flex flex-col rounded-lg border bg-white p-5 shadow-subtle transition duration-200 ease-standard ${current ? "border-accent-500 ring-1 ring-accent-500" : "border-gray-200 hover:border-accent-200 hover:shadow-card"}`}
                 >
                   <div className="flex items-center justify-between">
                     <h2 className="text-base font-semibold text-gray-900">{plan.label}</h2>
@@ -49,7 +51,11 @@ export default function SubscriptionPage() {
                     size="sm"
                     className="mt-5 w-full"
                     disabled={current || pending}
-                    onClick={() => run(() => setPlan(key), { success: `You're now on ${plan.label} (demo).` })}
+                    loading={pending && switching === key}
+                    onClick={() => {
+                      setSwitching(key);
+                      run(() => setPlan(key), { success: `You're now on ${plan.label} (demo).` });
+                    }}
                   >
                     {current ? "Current plan" : `Switch to ${plan.label}`}
                   </Button>

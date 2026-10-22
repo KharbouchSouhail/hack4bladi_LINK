@@ -1,7 +1,19 @@
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
+
+// Starts at 0 and moves to `value` on the next frame, so the CSS transition draws the bar or ring filling in.
+// Later changes animate the same way. With reduced motion the transition is instant.
+function useAnimatedValue(value) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setShown(value));
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return shown;
+}
 
 export function ProgressBar({ value, label, className = "" }) {
   const clamped = Math.max(0, Math.min(100, value));
+  const shown = useAnimatedValue(clamped);
   return (
     <div
       role="progressbar"
@@ -11,7 +23,7 @@ export function ProgressBar({ value, label, className = "" }) {
       aria-label={label}
       className={`h-1.5 w-full overflow-hidden rounded-full bg-accent-50 ${className}`}
     >
-      <div className="bg-gradient-brand-cyan h-full rounded-full transition-[width] duration-300" style={{ width: `${clamped}%` }} />
+      <div className="bg-gradient-brand-cyan h-full rounded-full transition-[width] duration-500 ease-emphasized" style={{ width: `${shown}%` }} />
     </div>
   );
 }
@@ -21,6 +33,7 @@ export function ScoreRing({ value, size = 112, label = "Compatibility score" }) 
   const circumference = 2 * Math.PI * radius;
   // React ids contain characters that break url(#…) references.
   const gradientId = `ring${useId().replace(/[^\w-]/g, "")}`;
+  const shown = useAnimatedValue(value);
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} className="shrink-0" role="img" aria-label={`${label}: ${value} out of 100`}>
@@ -39,10 +52,10 @@ export function ScoreRing({ value, size = 112, label = "Compatibility score" }) 
         strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray={circumference}
-        strokeDashoffset={circumference * (1 - value / 100)}
+        strokeDashoffset={circumference * (1 - shown / 100)}
         transform="rotate(-90 50 50)"
         stroke={`url(#${gradientId})`}
-        className="transition-[stroke-dashoffset] duration-500"
+        className="transition-[stroke-dashoffset] duration-700 ease-emphasized"
       />
       <text x="50" y="52" textAnchor="middle" className="fill-gray-900 text-[24px] font-semibold tabular-nums">
         {value}

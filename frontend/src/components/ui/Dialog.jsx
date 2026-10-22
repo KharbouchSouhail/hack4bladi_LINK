@@ -64,7 +64,7 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, children, confi
           <Button variant="secondary" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant={danger ? "danger" : "solid"} size="sm" onClick={onConfirm} disabled={pending}>
+          <Button loading={pending} variant={danger ? "danger" : "solid"} size="sm" onClick={onConfirm} disabled={pending}>
             {pending ? "Working…" : confirmLabel}
           </Button>
         </>

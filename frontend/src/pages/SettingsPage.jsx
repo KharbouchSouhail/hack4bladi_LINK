@@ -36,7 +36,7 @@ function ProfileFields({ me }) {
       <Input label="Location" value={form.location} onChange={update("location")} autoComplete="address-level2" />
       <Input label="Headline" value={form.headline} onChange={update("headline")} error={errors.headline} placeholder="e.g. Final-year engineering student" />
       <div className="sm:col-span-2">
-        <Button type="submit" variant="solid" size="sm" disabled={pending}>
+        <Button loading={pending} type="submit" variant="solid" size="sm" disabled={pending}>
           {pending ? "Saving…" : "Save profile"}
         </Button>
       </div>

@@ -71,7 +71,7 @@ export default function JobEditorDialog({ job, profiles, skills, companies, onSa
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" size="sm" type="submit" form="job-form" disabled={pending}>
+          <Button loading={pending} variant="solid" size="sm" type="submit" form="job-form" disabled={pending}>
             {pending ? "Saving…" : "Save job"}
           </Button>
         </>

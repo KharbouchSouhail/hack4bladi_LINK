@@ -34,7 +34,7 @@ export function CompanyMark({ name, size = "md" }) {
 
 export function JobCard({ job, eligibilityLocked }) {
   return (
-    <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-subtle transition-shadow duration-200 hover:shadow-card">
+    <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-subtle card-interactive hover:border-accent-200">
       <div className="flex items-start gap-3">
         <CompanyMark name={job.company.name} />
         <div className="min-w-0 flex-1">
@@ -82,7 +82,7 @@ export function JobCard({ job, eligibilityLocked }) {
 export function LearningCard({ course, locked = course.accessible === false }) {
   const status = course.progress === 100 ? "Completed" : course.progress > 0 ? "In progress" : "Not started";
   return (
-    <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-subtle transition-shadow duration-200 hover:shadow-card">
+    <article className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-subtle card-interactive hover:border-accent-200">
       <div className="flex flex-wrap items-center gap-1.5">
         <Badge tone="accent">{course.skillName}</Badge>
         <Badge>{course.difficulty}</Badge>
@@ -135,7 +135,7 @@ export function TargetRoleDialog({ open, onClose, currentId }) {
           <Button variant="secondary" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="solid" size="sm" onClick={save} disabled={!selected || pending}>
+          <Button loading={pending} variant="solid" size="sm" onClick={save} disabled={!selected || pending}>
             {pending ? "Saving…" : "Use this role"}
           </Button>
         </>
@@ -207,6 +207,31 @@ function StageList({ stage }) {
   );
 }
 
+function fileKind(file) {
+  return file.name.split(".").pop().toUpperCase();
+}
+
+function formatSize(bytes) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function FileChip({ file }) {
+  if (!file) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-25 px-3 py-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent-50 text-accent-600">
+        <FileText aria-hidden="true" size={18} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-medium text-gray-900">{file.name}</span>
+        <span className="text-[11px] text-gray-500">
+          {fileKind(file)} · {formatSize(file.size)}
+        </span>
+      </span>
+    </div>
+  );
+}
+
 // Choosing a file starts the analysis immediately; there is no separate "analyse" step.
 // Closing the dialog mid-analysis is safe: the analysis keeps running and its status is saved.
 export function ResumeUploadDialog({ open, onClose }) {
@@ -214,6 +239,7 @@ export function ResumeUploadDialog({ open, onClose }) {
   const [errors, setErrors] = useState({});
   const [stage, setStage] = useState(null);
   const [slow, setSlow] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const closed = useRef(false);
   const navigate = useNavigate();
   const toast = useToast();
@@ -271,6 +297,29 @@ export function ResumeUploadDialog({ open, onClose }) {
     if (file) analyse(file, "");
   }
 
+  // Drag and drop feeds the same path as the file picker, so the same checks apply.
+  const dropHandlers = {
+    onDragEnter: (e) => {
+      e.preventDefault();
+      setDragging(true);
+    },
+    onDragOver: (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = form.consent ? "copy" : "none";
+    },
+    onDragLeave: (e) => {
+      if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false);
+    },
+    onDrop: (e) => {
+      e.preventDefault();
+      setDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (!file) return;
+      if (!form.consent) setErrors({ consent: "Please confirm before we analyse your résumé." });
+      else pickFile(file);
+    },
+  };
+
   return (
     <Dialog
       open={open}
@@ -298,10 +347,11 @@ export function ResumeUploadDialog({ open, onClose }) {
     >
       {running ? (
         <div className="space-y-4" role="status" aria-live="polite">
-          <p className="flex items-center gap-2 text-[13px] text-gray-700">
-            <FileText aria-hidden="true" size={16} className="text-accent-600" />
-            <span className="truncate font-medium">{form.file?.name}</span>
-          </p>
+          <FileChip file={form.file} />
+          {/* Indeterminate on purpose: the analysis doesn't report a percentage, so none is invented. */}
+          <div className="h-1 overflow-hidden rounded-full bg-accent-50" aria-hidden="true">
+            <div className="h-full w-2/5 animate-indeterminate rounded-full bg-gradient-brand-cyan" />
+          </div>
           <StageList stage={stage} />
           {slow && (
             <p className="rounded-md bg-info-bg px-3 py-2 text-xs text-info">
@@ -327,18 +377,29 @@ export function ResumeUploadDialog({ open, onClose }) {
 
           <div>
             <label
-              className={`flex flex-col items-center rounded-lg border border-dashed px-4 py-6 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-600 ${
+              {...dropHandlers}
+              className={`flex flex-col items-center rounded-lg border-2 border-dashed px-4 py-7 text-center transition duration-200 ease-standard has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-600 ${
                 !form.consent
                   ? "cursor-not-allowed border-gray-200 bg-gray-50 opacity-60"
-                  : errors.file
-                    ? "cursor-pointer border-error bg-error-bg/40"
-                    : "cursor-pointer border-gray-300 bg-gray-50 hover:bg-gray-100"
+                  : dragging
+                    ? "cursor-copy border-accent-500 bg-accent-50 ring-4 ring-accent-500/15"
+                    : errors.file
+                      ? "cursor-pointer border-error bg-error-bg/40"
+                      : "cursor-pointer border-gray-300 bg-gray-50 hover:border-accent-300 hover:bg-accent-50/50"
               }`}
             >
-              <FileUp aria-hidden="true" size={22} className="text-accent-600" />
-              <span className="mt-2 text-sm font-medium text-gray-900">{form.file ? form.file.name : "Choose a PDF or DOCX file"}</span>
-              <span className="text-xs text-gray-500">
-                {form.file ? `${Math.round(form.file.size / 1024)} KB · choose another file to replace it` : "Up to 5 MB · analysis starts automatically"}
+              <span
+                className={`flex h-11 w-11 items-center justify-center rounded-full bg-white text-accent-600 shadow-subtle ring-1 ring-accent-100 transition-transform duration-200 ease-standard ${
+                  dragging ? "-translate-y-1" : ""
+                }`}
+              >
+                <FileUp aria-hidden="true" size={20} />
+              </span>
+              <span className="mt-3 text-sm font-semibold text-gray-900">
+                {dragging ? "Drop to upload and analyse" : form.file ? form.file.name : "Drag your résumé here, or choose a file"}
+              </span>
+              <span className="mt-0.5 text-xs text-gray-500">
+                {form.file && !dragging ? `${fileKind(form.file)} · ${formatSize(form.file.size)} · choose or drop another file to replace it` : "PDF or DOCX · up to 5 MB · analysis starts automatically"}
               </span>
               <input
                 type="file"
@@ -352,7 +413,7 @@ export function ResumeUploadDialog({ open, onClose }) {
               />
             </label>
             {errors.file && <p className="mt-1.5 text-xs text-error">{errors.file}</p>}
-            {!form.consent && <p className="mt-1.5 text-[11px] text-gray-500">Tick the box above to choose a file.</p>}
+            {!form.consent && <p className="mt-1.5 text-[11px] text-gray-500">Tick the box above to choose or drop a file.</p>}
           </div>
 
           {form.needsText && (

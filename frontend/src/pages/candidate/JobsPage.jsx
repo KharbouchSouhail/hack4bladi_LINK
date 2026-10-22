@@ -54,7 +54,7 @@ function JobList({ data }) {
           <EmptyState icon={Briefcase} title={data.jobs.length ? "No jobs match these filters" : "No job opportunities right now"} />
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {jobs.map((job) => (
             <JobCard key={job.id} job={job} eligibilityLocked={data.eligibilityLocked} />
           ))}
@@ -63,7 +63,7 @@ function JobList({ data }) {
 
       {data.lockedCount > 0 && (
         <section aria-label="Locked job opportunities">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: data.lockedCount }, (_, i) => (
               <LockedCard
                 key={i}

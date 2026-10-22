@@ -32,11 +32,11 @@ export function ToastProvider({ children }) {
             <div
               key={t.id}
               role={t.tone === "error" ? "alert" : "status"}
-              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-3.5 py-3 text-[13px] text-gray-800 shadow-dropdown"
+              className="pointer-events-auto flex animate-enter items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-3.5 py-3 text-[13px] text-gray-800 shadow-dropdown"
             >
               <Icon aria-hidden="true" size={18} strokeWidth={1.8} className={`mt-px shrink-0 ${t.tone === "success" ? "text-success" : "text-error"}`} />
               <span className="flex-1">{t.message}</span>
-              <button type="button" onClick={() => dismiss(t.id)} aria-label="Dismiss" className="text-gray-400 hover:text-gray-700">
+              <button type="button" onClick={() => dismiss(t.id)} aria-label="Dismiss" className="rounded text-gray-400 transition-colors duration-150 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-accent-500">
                 <X size={16} />
               </button>
             </div>

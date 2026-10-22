@@ -43,7 +43,7 @@ export default function ProfileEditorDialog({ profile, skills, companies, onSave
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" size="sm" type="submit" form="profile-form" disabled={pending}>
+          <Button loading={pending} variant="solid" size="sm" type="submit" form="profile-form" disabled={pending}>
             {pending ? "Saving…" : "Save profile"}
           </Button>
         </>

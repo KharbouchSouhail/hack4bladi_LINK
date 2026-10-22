@@ -42,7 +42,7 @@ function SkillDialog({ skill, allSkills, onClose }) {
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" size="sm" type="submit" form="skill-form" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+          <Button loading={pending} variant="solid" size="sm" type="submit" form="skill-form" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
         </>
       }
     >

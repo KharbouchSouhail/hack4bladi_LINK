@@ -47,7 +47,7 @@ function CourseGrid({ data }) {
           <EmptyState icon={BookOpen} title={data.courses.length ? "No courses match these filters" : "No courses available yet"} />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {courses.map((c) => (
             <LearningCard key={c.id} course={c} />
           ))}
@@ -56,7 +56,7 @@ function CourseGrid({ data }) {
 
       {data.lockedCount > 0 && (
         <section aria-label="Locked courses">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: data.lockedCount }, (_, i) => (
               <LockedCard
                 key={i}

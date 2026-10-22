@@ -270,7 +270,7 @@ export default function CandidateDashboard() {
   const firstName = me.data.name.split(" ")[0];
 
   return (
-    <div className="space-y-6">
+    <div className="stagger space-y-6">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Welcome back, {firstName}</h1>

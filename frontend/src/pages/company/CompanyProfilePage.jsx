@@ -30,7 +30,7 @@ function CompanyForm({ company }) {
         <Input label="Website" value={form.website} onChange={set("website")} className="sm:col-span-2" />
         <Textarea label="Description" rows={4} value={form.description} onChange={set("description")} error={errors.description} className="sm:col-span-2" hint={`${form.description.length}/500`} />
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-          <Button type="submit" variant="solid" size="sm" disabled={pending}>
+          <Button loading={pending} type="submit" variant="solid" size="sm" disabled={pending}>
             {pending ? "Saving…" : "Save changes"}
           </Button>
           <p className="text-xs text-gray-500">Partner status is managed by the Link team.</p>

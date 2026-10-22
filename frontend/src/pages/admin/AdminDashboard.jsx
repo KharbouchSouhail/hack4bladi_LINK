@@ -23,7 +23,7 @@ export default function AdminDashboard() {
       <QueryBoundary query={query} rows={8}>
         {({ metrics: m, perStatus, perPlan, activity }) => (
           <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatTile label="Candidates" value={m.candidates} icon={Users} />
               <StatTile label="Companies" value={m.companies} hint={`${m.activeCompanies} active`} icon={Building2} />
               <StatTile label="Published job profiles" value={m.publishedProfiles} icon={ListChecks} />
