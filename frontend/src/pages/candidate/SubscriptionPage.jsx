@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, FlaskConical } from "lucide-react";
 import Button from "../../components/Button.jsx";
 import Badge from "../../components/ui/Badge.jsx";
+import PlanPrice from "../../components/ui/PlanPrice.jsx";
 import { PageHeader } from "../../components/ui/Card.jsx";
 import { QueryBoundary } from "../../components/ui/states.jsx";
 import { PLAN_ORDER, PLANS } from "../../domain/permissions.js";
@@ -37,7 +38,7 @@ export default function SubscriptionPage() {
                     {current && <Badge tone="accent">Current plan</Badge>}
                   </div>
                   <p className="mt-1 text-xs text-gray-500">{plan.tagline}</p>
-                  <p className="mt-3 text-xl font-semibold text-gray-900">{plan.price}</p>
+                  <PlanPrice plan={key} />
                   <ul className="mt-4 flex-1 space-y-2">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-start gap-2 text-[13px] text-gray-700">

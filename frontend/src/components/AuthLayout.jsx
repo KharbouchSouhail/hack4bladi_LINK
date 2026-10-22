@@ -1,6 +1,6 @@
 import { Link as RouterLink } from "react-router-dom";
 import { Check } from "lucide-react";
-import logoMark from "../assets/logo-mark.png";
+import logoMark from "../assets/logo-new.png";
 
 // Dot grids are a background pattern so they stay crisp at any size; color comes from `text-*`.
 const DOTS = {
@@ -73,7 +73,7 @@ export default function AuthLayout({ title, subtitle, aside, children, footer })
             aria-label="Link home"
             className="mx-auto rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-500"
           >
-            <img src={logoMark} alt="" width="56" height="56" className="h-14 w-14 animate-[reveal-scale_500ms_var(--ease-reveal)_backwards] rounded-xl shadow-card transition-transform duration-200 ease-standard hover:-translate-y-0.5" />
+            <img src={logoMark} alt="" width="90" height="56" className="h-14 w-auto animate-[reveal-scale_500ms_var(--ease-reveal)_backwards] transition-transform duration-200 ease-standard hover:-translate-y-0.5" />
           </RouterLink>
           <h1 className="mt-4 text-center text-2xl font-semibold tracking-tight">
             <span className="mask-line">

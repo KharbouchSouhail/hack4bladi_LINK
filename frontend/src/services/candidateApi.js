@@ -6,6 +6,7 @@ import { checkEligibility } from "../domain/eligibility.js";
 import { buildContext, courseProgress, STRENGTHS, SKILL_STATES } from "../domain/evidence.js";
 import { buildLearningPath, gradeAttempt } from "../domain/learning.js";
 import { can, FREE_LIMITS, FREE_VISIBLE_GAPS, PLANS, requiredPlan } from "../domain/permissions.js";
+import { amountDue, formatPrice } from "../domain/pricing.js";
 import { computeMatch } from "../domain/scoring.js";
 import { runStructuredAnalysis } from "./analyzer.js";
 import { findOr404, getDb, logActivity, lookups, mutate, newId, notify, request, requireRole, validate } from "./core.js";
@@ -907,15 +908,18 @@ export function confirmInterviewAttendance(interviewId) {
   });
 }
 
-// Demo only: there is no payment. A real backend would change the plan after a billing webhook.
+// Demo only: there is no payment. A real backend would change the plan after a billing webhook,
+// and charge amountDue() from pricing.js so the amount billed matches the price shown.
 export function setPlan(plan) {
   return request(() => {
     const candidate = currentCandidate();
     if (!PLANS[plan]) throw new ValidationError({ plan: "Unknown plan." });
+    const firstCharge = amountDue(plan, 1);
     mutate((draft) => {
       draft.candidates.find((c) => c.id === candidate.id).plan = plan;
-      logActivity(draft, `${candidate.name} switched to the ${PLANS[plan].label} plan (demo)`);
+      logActivity(draft, `${candidate.name} switched to the ${PLANS[plan].label} plan (demo, first month ${formatPrice(firstCharge)}, not charged)`);
     });
+    return { plan, firstCharge };
   });
 }
 

@@ -4,6 +4,7 @@ import DataTable, { Toolbar } from "../../components/ui/DataTable.jsx";
 import { FilterSelect, SearchInput } from "../../components/ui/form.jsx";
 import { EmptyState, QueryBoundary } from "../../components/ui/states.jsx";
 import { PLAN_ORDER, PLANS } from "../../domain/permissions.js";
+import { priceSummary } from "../../domain/pricing.js";
 import { useAction, useQuery } from "../../hooks/useQuery.js";
 import { listCandidates, setCandidatePlan } from "../../services/adminApi.js";
 
@@ -59,7 +60,7 @@ export default function AdminSubscriptionsPage() {
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-3">
               {PLAN_ORDER.map((p) => (
-                <StatTile key={p} label={`${PLANS[p].label} · ${PLANS[p].price}`} value={candidates.filter((c) => c.plan === p).length} hint={PLANS[p].tagline} />
+                <StatTile key={p} label={`${PLANS[p].label} · ${priceSummary(p)}`} value={candidates.filter((c) => c.plan === p).length} hint={PLANS[p].tagline} />
               ))}
             </div>
             <Card bodyClassName="">

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Check, Lock } from "lucide-react";
 import { PLANS } from "../../domain/permissions.js";
+import PlanPrice from "../ui/PlanPrice.jsx";
 import { buttonClasses } from "../Button.jsx";
 import Dialog from "../ui/Dialog.jsx";
 
@@ -38,9 +39,11 @@ function PlanColumn({ planKey, highlight }) {
   const plan = PLANS[planKey];
   return (
     <section className={`rounded-lg border p-4 transition-colors duration-200 ease-standard ${highlight ? "border-accent-300 bg-accent-50/50" : "border-gray-200 hover:border-accent-200"}`}>
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <h3 className="text-sm font-semibold text-gray-900">{plan.label}</h3>
-        <span className="text-xs text-gray-500">{plan.price}</span>
+        <div className="text-right">
+          <PlanPrice plan={planKey} size="sm" />
+        </div>
       </div>
       <p className="text-xs text-gray-600">{plan.tagline}</p>
       <ul className="mt-3 space-y-1.5">

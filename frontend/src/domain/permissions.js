@@ -1,4 +1,4 @@
-// Single source of truth for what each subscription plan unlocks.
+// Single source of truth for what each subscription plan unlocks. Prices live in pricing.js.
 // The demo service layer calls assertCan() before returning data; a real backend must do the same.
 
 export const PLAN_ORDER = ["free", "pro", "max"];
@@ -6,7 +6,6 @@ export const PLAN_ORDER = ["free", "pro", "max"];
 export const PLANS = {
   free: {
     label: "Free",
-    price: "0 MAD",
     tagline: "See where you stand",
     features: [
       "Automatic résumé analysis",
@@ -20,13 +19,11 @@ export const PLANS = {
   },
   pro: {
     label: "Pro",
-    price: "49 MAD / month",
     tagline: "Know exactly what to work on",
     features: ["Everything in Free", "Full skill-gap report: every missing skill", "Browse every course and job opportunity", "Skill priorities", "Expected proficiency levels", "Learning path overview"],
   },
   max: {
     label: "Max",
-    price: "99 MAD / month",
     tagline: "Learn, prove it and apply",
     features: [
       "Everything in Pro",
