@@ -187,19 +187,19 @@ const EMPTY_UPLOAD = { file: null, text: "", consent: false, needsText: false };
 function StageList({ stage }) {
   const current = UPLOAD_STAGES.findIndex((s) => s.key === stage);
   return (
-    <ol className="space-y-2.5" aria-label="Analysis progress">
+    <ol className="stagger space-y-2.5" aria-label="Analysis progress">
       {UPLOAD_STAGES.map((s, i) => {
         const state = i < current ? "done" : i === current ? "active" : "todo";
         return (
           <li key={s.key} className="flex items-center gap-2.5 text-[13px]" aria-current={state === "active" ? "step" : undefined}>
             {state === "done" ? (
-              <CheckCircle2 aria-hidden="true" size={18} className="shrink-0 text-success" />
+              <CheckCircle2 aria-hidden="true" size={18} className="shrink-0 animate-pop-in text-success" />
             ) : state === "active" ? (
               <Loader2 aria-hidden="true" size={18} className="shrink-0 animate-spin text-accent-600" />
             ) : (
               <Circle aria-hidden="true" size={18} className="shrink-0 text-gray-300" />
             )}
-            <span className={state === "todo" ? "text-gray-500" : "font-medium text-gray-900"}>{s.label}</span>
+            <span className={`transition-colors duration-200 ease-standard ${state === "todo" ? "text-gray-500" : "font-medium text-gray-900"}`}>{s.label}</span>
           </li>
         );
       })}
@@ -346,7 +346,7 @@ export function ResumeUploadDialog({ open, onClose }) {
       }
     >
       {running ? (
-        <div className="space-y-4" role="status" aria-live="polite">
+        <div className="animate-fade-in space-y-4" role="status" aria-live="polite">
           <FileChip file={form.file} />
           {/* Indeterminate on purpose: the analysis doesn't report a percentage, so none is invented. */}
           <div className="h-1 overflow-hidden rounded-full bg-accent-50" aria-hidden="true">
@@ -354,13 +354,13 @@ export function ResumeUploadDialog({ open, onClose }) {
           </div>
           <StageList stage={stage} />
           {slow && (
-            <p className="rounded-md bg-info-bg px-3 py-2 text-xs text-info">
+            <p className="animate-enter rounded-md bg-info-bg px-3 py-2 text-xs text-info">
               This is taking longer than usual. You can keep waiting or continue in the background — your results will be saved.
             </p>
           )}
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="animate-fade-in space-y-5">
           <div>
             <Checkbox
               label="I agree that my résumé is analysed to estimate my alignment with the selected role."
@@ -372,7 +372,7 @@ export function ResumeUploadDialog({ open, onClose }) {
                 if (consent) setErrors((err) => ({ ...err, consent: undefined }));
               }}
             />
-            {errors.consent && <p className="mt-1.5 text-xs text-error">{errors.consent}</p>}
+            {errors.consent && <p className="mt-1.5 animate-enter text-xs text-error">{errors.consent}</p>}
           </div>
 
           <div>
@@ -389,8 +389,8 @@ export function ResumeUploadDialog({ open, onClose }) {
               }`}
             >
               <span
-                className={`flex h-11 w-11 items-center justify-center rounded-full bg-white text-accent-600 shadow-subtle ring-1 ring-accent-100 transition-transform duration-200 ease-standard ${
-                  dragging ? "-translate-y-1" : ""
+                className={`flex h-11 w-11 items-center justify-center rounded-full bg-white text-accent-600 shadow-subtle ring-1 ring-accent-100 transition duration-200 ease-standard ${
+                  dragging ? "-translate-y-1 scale-110 ring-accent-300" : ""
                 }`}
               >
                 <FileUp aria-hidden="true" size={20} />
@@ -412,7 +412,7 @@ export function ResumeUploadDialog({ open, onClose }) {
                 }}
               />
             </label>
-            {errors.file && <p className="mt-1.5 text-xs text-error">{errors.file}</p>}
+            {errors.file && <p className="mt-1.5 animate-enter text-xs text-error">{errors.file}</p>}
             {!form.consent && <p className="mt-1.5 text-[11px] text-gray-500">Tick the box above to choose or drop a file.</p>}
           </div>
 

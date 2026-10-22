@@ -9,7 +9,7 @@ const TONES = {
 export default function Alert({ tone = "error", children }) {
   const { box, Icon } = TONES[tone];
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={`flex items-start gap-2 rounded-control border px-3.5 py-3 text-[13px] ${box}`}>
+    <div role={tone === "error" ? "alert" : "status"} className={`flex animate-enter items-start gap-2 rounded-control border px-3.5 py-3 text-[13px] ${box}`}>
       <Icon aria-hidden="true" size={18} strokeWidth={1.8} className="mt-px shrink-0" />
       <span>{children}</span>
     </div>

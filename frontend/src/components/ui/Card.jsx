@@ -1,6 +1,7 @@
-export default function Card({ title, description, action, children, className = "", bodyClassName = "p-5", as: Tag = "section" }) {
+// Extra props (e.g. `data-reveal`) go to the outer element.
+export default function Card({ title, description, action, children, className = "", bodyClassName = "p-5", as: Tag = "section", ...props }) {
   return (
-    <Tag className={`rounded-lg border border-gray-200 bg-white shadow-subtle ${className}`}>
+    <Tag className={`rounded-lg border border-gray-200 bg-white shadow-subtle ${className}`} {...props}>
       {(title || action) && (
         <header className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
           <div className="min-w-0">
@@ -28,12 +29,13 @@ export function PageHeader({ title, description, actions, eyebrow }) {
   );
 }
 
+// Not clickable, so hover only warms the border and icon instead of lifting the tile.
 export function StatTile({ label, value, hint, icon: Icon }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-subtle">
+    <div className="group rounded-lg border border-gray-200 bg-white p-4 shadow-subtle transition-colors duration-200 ease-standard hover:border-accent-200">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-medium text-gray-500">{label}</p>
-        {Icon && <Icon aria-hidden="true" size={16} strokeWidth={1.8} className="text-gray-400" />}
+        {Icon && <Icon aria-hidden="true" size={16} strokeWidth={1.8} className="text-gray-400 transition-colors duration-200 ease-standard group-hover:text-accent-500" />}
       </div>
       <p className="mt-2 text-2xl font-semibold text-gray-900 tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}

@@ -135,7 +135,7 @@ export default function JobDetailPage() {
       <QueryBoundary query={query} rows={6}>
         {(job) => (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-5">
+            <div className="stagger space-y-5">
               <div className="flex items-start gap-4">
                 <CompanyMark name={job.company.name} size="lg" />
                 <div>

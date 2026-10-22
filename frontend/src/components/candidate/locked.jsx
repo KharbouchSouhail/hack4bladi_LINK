@@ -37,7 +37,7 @@ export function LockedCard({ title, hint, label, onClick }) {
 function PlanColumn({ planKey, highlight }) {
   const plan = PLANS[planKey];
   return (
-    <section className={`rounded-lg border p-4 ${highlight ? "border-accent-300 bg-accent-50/50" : "border-gray-200"}`}>
+    <section className={`rounded-lg border p-4 transition-colors duration-200 ease-standard ${highlight ? "border-accent-300 bg-accent-50/50" : "border-gray-200 hover:border-accent-200"}`}>
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold text-gray-900">{plan.label}</h3>
         <span className="text-xs text-gray-500">{plan.price}</span>
@@ -74,7 +74,7 @@ export function UpgradeDialog({ open, onClose, title, description, highlight = "
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="stagger grid gap-3 sm:grid-cols-2">
         <PlanColumn planKey="pro" highlight={highlight === "pro"} />
         <PlanColumn planKey="max" highlight={highlight === "max"} />
       </div>
@@ -83,10 +83,10 @@ export function UpgradeDialog({ open, onClose, title, description, highlight = "
   );
 }
 
-// The "N more locked" strip shown under a grid of locked cards.
+// The "N more locked" strip shown under a grid of locked cards. It reveals as it scrolls into view.
 export function UnlockBanner({ icon: Icon, children, action, onClick }) {
   return (
-    <div className="mt-4 flex flex-col gap-3 rounded-lg border border-accent-100 bg-accent-50/60 px-4 py-3.5 sm:flex-row sm:items-center">
+    <div data-reveal="up" className="mt-4 flex flex-col gap-3 rounded-lg border border-accent-100 bg-accent-50/60 px-4 py-3.5 sm:flex-row sm:items-center">
       <Icon aria-hidden="true" size={18} className="shrink-0 text-accent-600" />
       <p className="flex-1 text-[13px] text-gray-700">{children}</p>
       <button type="button" onClick={onClick} className={buttonClasses("solid", "", "sm")}>

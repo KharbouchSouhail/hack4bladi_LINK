@@ -60,7 +60,7 @@ export default function CourseDetailPage() {
               <Video url={course.videoUrl} title={course.title} />
             </div>
 
-            <div className="space-y-5">
+            <div className="stagger space-y-5">
               <Card title="Lessons" description={`${course.completedLessonIds.length} of ${course.lessons.length} completed`}>
                 <ProgressBar value={course.progress} label="Course progress" />
                 <ul className="mt-4 space-y-1">

@@ -81,7 +81,7 @@ export function BarList({ items, total, emptyLabel = "No data yet." }) {
             <span className="font-semibold text-gray-900 tabular-nums">{item.display ?? item.value}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-r-[4px] bg-accent-50">
-            <div className="h-full rounded-r-[4px] bg-accent-500" style={{ width: `${(100 * item.value) / max}%` }} />
+            <div className="h-full origin-left animate-grow-x rounded-r-[4px] bg-accent-500" style={{ width: `${(100 * item.value) / max}%` }} />
           </div>
         </li>
       ))}

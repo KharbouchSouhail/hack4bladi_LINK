@@ -129,7 +129,7 @@ export function FilterSelect({ label, options, className = "", ...props }) {
 export function FormError({ children }) {
   if (!children) return null;
   return (
-    <p role="alert" className="flex items-start gap-2 rounded-control border border-error/20 bg-error-bg px-3 py-2.5 text-[13px] text-error">
+    <p role="alert" className="flex animate-enter items-start gap-2 rounded-control border border-error/20 bg-error-bg px-3 py-2.5 text-[13px] text-error">
       <AlertCircle aria-hidden="true" size={16} strokeWidth={1.8} className="mt-px shrink-0" />
       {children}
     </p>

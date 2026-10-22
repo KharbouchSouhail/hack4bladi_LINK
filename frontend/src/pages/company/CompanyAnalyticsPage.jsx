@@ -13,7 +13,7 @@ export default function CompanyAnalyticsPage() {
       <PageHeader title="Analytics" description="Calculated live from your listings and applications." />
       <QueryBoundary query={query} rows={6}>
         {(a) => (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="stagger grid gap-6 lg:grid-cols-2">
             <Card title="Applications per listing">
               <BarList items={a.perJob.map((j) => ({ key: j.id, label: j.title, value: j.count }))} emptyLabel="No listings yet." />
             </Card>

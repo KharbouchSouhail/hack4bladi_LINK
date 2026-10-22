@@ -21,8 +21,8 @@ function QuickActions({ hasResume, onUpload }) {
     if (ok) navigate("/candidate/assessments");
   }
 
-  const action = "flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-[13px] font-medium text-gray-800 shadow-subtle transition hover:border-accent-200 hover:bg-accent-50/40 focus-visible:outline-2 focus-visible:outline-accent-600";
-  const icon = "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent-50 text-accent-600";
+  const action = "group flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-[13px] font-medium text-gray-800 shadow-subtle card-interactive hover:border-accent-200 hover:bg-accent-50/40 focus-visible:outline-2 focus-visible:outline-accent-600 disabled:pointer-events-none";
+  const icon = "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent-50 text-accent-600 transition-colors duration-200 ease-standard group-hover:bg-accent-500 group-hover:text-white";
 
   return (
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -273,7 +273,11 @@ export default function CandidateDashboard() {
     <div className="stagger space-y-6">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Welcome back, {firstName}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+            <span className="mask-line">
+              <span className="block animate-rise">Welcome back, {firstName}</span>
+            </span>
+          </h1>
           <p className="mt-1 max-w-2xl text-sm text-gray-600">
             Build the skills employers are looking for and take your next step toward your career goals.
           </p>

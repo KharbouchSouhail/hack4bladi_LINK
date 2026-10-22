@@ -24,7 +24,7 @@ export default function AdminCandidateDetail() {
       </Link>
       <QueryBoundary query={query} rows={8}>
         {(c) => (
-          <div className="space-y-6">
+          <div className="stagger space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{c.name}</h1>
               <Badge tone={c.plan === "free" ? "neutral" : "accent"}>{PLANS[c.plan].label}</Badge>

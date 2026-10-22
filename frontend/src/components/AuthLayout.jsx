@@ -8,10 +8,10 @@ const DOTS = {
   backgroundSize: "14px 14px",
 };
 
-// Purely decorative shapes for the blue panel, after the reference mockup.
+// Purely decorative shapes for the blue panel, after the reference mockup. They settle in once, one after another.
 function PanelDecorations() {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+    <div aria-hidden="true" className="stagger pointer-events-none absolute inset-0">
       <span className="absolute -top-10 left-10 h-20 w-20 rounded-full bg-white/90" />
       <span className="absolute top-16 left-8 h-12 w-24 text-white/40" style={DOTS} />
       <span className="absolute top-0 left-40 h-24 w-5 rounded-b-full bg-white/25" />
@@ -47,18 +47,20 @@ export default function AuthLayout({ title, subtitle, aside, children, footer })
         <span className="absolute right-8 bottom-8 h-16 w-24 text-accent-200" style={DOTS} />
       </div>
 
-      <div className="relative z-10 grid w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(66,85,201,0.25)] md:max-w-5xl md:grid-cols-2">
+      <div className="relative z-10 grid w-full max-w-md animate-[reveal-scale_600ms_var(--ease-reveal)_backwards] overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(66,85,201,0.25)] md:max-w-5xl md:grid-cols-2">
         <aside className="relative hidden min-h-[600px] flex-col justify-center overflow-hidden bg-linear-135 from-accent-500 via-accent-600 to-accent-700 px-10 py-16 text-white md:flex lg:px-14">
           <PanelDecorations />
           <div className="relative">
             <h2 className="max-w-sm font-display text-4xl leading-[1.1] font-bold tracking-tight lg:text-5xl">
-              {aside.heading}
+              <span className="mask-line">
+                <span className="block animate-rise [animation-delay:120ms]">{aside.heading}</span>
+              </span>
             </h2>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/90">{aside.text}</p>
+            <p className="mt-4 max-w-sm animate-reveal text-sm leading-relaxed text-white/90 [animation-delay:280ms]">{aside.text}</p>
             {aside.points && (
               <ul className="mt-6 space-y-2">
-                {aside.points.map((point) => (
-                  <li key={point} className="flex items-center gap-2 text-[13px] text-white/95">
+                {aside.points.map((point, i) => (
+                  <li key={point} className="flex animate-reveal items-center gap-2 text-[13px] text-white/95" style={{ animationDelay: `${380 + i * 70}ms` }}>
                     <CheckCircle2 aria-hidden="true" size={16} strokeWidth={2} className="shrink-0 text-brand-cyan" />
                     {point}
                   </li>
@@ -74,11 +76,16 @@ export default function AuthLayout({ title, subtitle, aside, children, footer })
             aria-label="Link home"
             className="mx-auto rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-500"
           >
-            <img src={logoMark} alt="" className="h-14 w-14 rounded-xl shadow-card" />
+            <img src={logoMark} alt="" width="56" height="56" className="h-14 w-14 animate-[reveal-scale_500ms_var(--ease-reveal)_backwards] rounded-xl shadow-card transition-transform duration-200 ease-standard hover:-translate-y-0.5" />
           </RouterLink>
-          <h1 className="mt-4 text-center text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-1 text-center text-[13px] text-gray-600">{subtitle}</p>
-          <div className="mt-7">{children}</div>
+          <h1 className="mt-4 text-center text-2xl font-semibold tracking-tight">
+            <span className="mask-line">
+              <span className="block animate-rise [animation-delay:80ms]">{title}</span>
+            </span>
+          </h1>
+          <p className="mt-1 animate-reveal text-center text-[13px] text-gray-600 [animation-delay:180ms]">{subtitle}</p>
+          {/* The form follows quickly and is usable straight away: only opacity and position animate. */}
+          <div className="mt-7 animate-reveal [animation-delay:240ms]">{children}</div>
           {footer && <p className="mt-6 text-center text-[13px] text-gray-600">{footer}</p>}
         </main>
       </div>

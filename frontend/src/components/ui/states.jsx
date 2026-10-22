@@ -30,8 +30,8 @@ export function EmptyState({ icon: Icon = Inbox, title, children, action }) {
 export function UpgradeCard({ plan, title, children, compact = false }) {
   const info = PLANS[plan];
   return (
-    <div className={`flex flex-col items-center text-center ${compact ? "px-5 py-6" : "px-6 py-10"}`}>
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-50 text-accent-600">
+    <div className={`flex animate-reveal flex-col items-center text-center ${compact ? "px-5 py-6" : "px-6 py-10"}`}>
+      <span className="flex h-10 w-10 animate-pop-in items-center justify-center rounded-full bg-accent-50 text-accent-600 [animation-delay:160ms]">
         <Lock aria-hidden="true" size={18} strokeWidth={1.8} />
       </span>
       <p className="mt-3 text-sm font-semibold text-gray-900">{title ?? `Available with ${info.label}`}</p>

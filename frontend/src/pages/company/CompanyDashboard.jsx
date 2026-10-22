@@ -40,7 +40,11 @@ export default function CompanyDashboard() {
               <CompanyMark name={company.name} size="lg" />
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{company.name}</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+                    <span className="mask-line">
+                      <span className="block animate-rise">{company.name}</span>
+                    </span>
+                  </h1>
                   <StatusBadge map={PARTNER_STATUSES} value={company.partnerStatus} />
                 </div>
                 <p className="text-sm text-gray-600">{[company.sector, company.city].filter(Boolean).join(" · ") || "Complete your company profile"}</p>
@@ -62,13 +66,13 @@ export default function CompanyDashboard() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <Card title="Hiring pipeline" description="Applications by status, across all your listings.">
+            <Card data-reveal="left" title="Hiring pipeline" description="Applications by status, across all your listings.">
               <BarList
                 items={statusCounts.map((s) => ({ key: s.status, label: APPLICATION_STATUSES[s.status].label, value: s.count }))}
                 total={Math.max(1, stats.totalApplications)}
               />
             </Card>
-            <Card title="Needs attention" description="Published listings with applications to review or none yet." bodyClassName="">
+            <Card data-reveal="right" title="Needs attention" description="Published listings with applications to review or none yet." bodyClassName="">
               {attention.length === 0 ? (
                 <EmptyState icon={BadgeCheck} title="Nothing waiting">Every application has been reviewed.</EmptyState>
               ) : (
@@ -95,6 +99,7 @@ export default function CompanyDashboard() {
           </div>
 
           <Card
+            data-reveal="up"
             title="Recent applications"
             action={<Link to="/company/candidates" className={buttonClasses("secondary", "", "xs")}>Open pipeline</Link>}
             bodyClassName=""

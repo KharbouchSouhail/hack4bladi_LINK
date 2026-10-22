@@ -97,6 +97,8 @@
      Micro-interactions 150–200 ms, entrances and dialogs 220–320 ms. Only opacity and transform are animated. */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  /* Long, soft deceleration for content scrolling into view and headline reveals (420–700 ms). */
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* "backwards" so no transform is left behind once an entrance ends (a transform would trap fixed children). */
   --animate-enter: enter 320ms var(--ease-emphasized) backwards;
@@ -104,6 +106,12 @@
   --animate-pop-in: pop-in 180ms var(--ease-emphasized) backwards;
   --animate-slide-in-left: slide-in-left 260ms var(--ease-emphasized) backwards;
   --animate-indeterminate: indeterminate 1.4s var(--ease-standard) infinite;
+  /* A line of text rising out of a `mask-line` wrapper. */
+  --animate-rise: rise 700ms var(--ease-reveal) backwards;
+  /* Slower fade-up for hero copy that follows a headline. */
+  --animate-reveal: reveal-up 600ms var(--ease-reveal) backwards;
+  --animate-grow-x: grow-x 700ms var(--ease-reveal) backwards;
+  --animate-indicator: indicator 260ms var(--ease-emphasized) backwards;
 
   @keyframes enter {
     from {
@@ -135,6 +143,53 @@
       transform: translateX(250%);
     }
   }
+  @keyframes rise {
+    from {
+      transform: translateY(105%);
+    }
+  }
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+  @keyframes reveal-left {
+    from {
+      opacity: 0;
+      transform: translateX(-24px);
+    }
+  }
+  @keyframes reveal-right {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+  }
+  @keyframes reveal-scale {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes indicator {
+    from {
+      transform: scaleY(0);
+    }
+  }
+}
+
+/* Clips a line so its text can rise into view. The padding keeps descenders (g, y) from being cut. */
+@utility mask-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
 }
 
 /* Children enter one after another, 40 ms apart, capped so long lists never make anyone wait. */
@@ -199,6 +254,38 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Scroll reveals, driven by useScrollReveal. Outside the utilities layer on purpose, so the hidden state
+   wins over a `.stagger` mount animation. Animations rather than transitions, so card hover transitions
+   keep working and nothing is left behind once the reveal ends. */
+[data-reveal-state="hidden"] {
+  opacity: 0;
+  animation: none;
+}
+/* Entrances inside a hidden block (bars growing, a nested cascade) wait and play when it is revealed. */
+[data-reveal-state="hidden"] * {
+  animation-play-state: paused;
+}
+[data-reveal-state="shown"] {
+  animation: reveal-up 600ms var(--ease-reveal) var(--reveal-delay, 0ms) backwards;
+}
+[data-reveal="left"][data-reveal-state="shown"] {
+  animation-name: reveal-left;
+}
+[data-reveal="right"][data-reveal-state="shown"] {
+  animation-name: reveal-right;
+}
+[data-reveal="scale"][data-reveal-state="shown"] {
+  animation-name: reveal-scale;
+}
+[data-reveal-state="done"] {
+  animation: none;
+}
+@media print {
+  [data-reveal-state="hidden"] {
+    opacity: 1;
+  }
+}
+
 /* Native <dialog>: fade the backdrop and lift the panel in. */
 dialog[open] {
   animation: pop-in 220ms var(--ease-emphasized);
@@ -217,6 +304,10 @@ dialog[open]::backdrop {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
+  }
+  /* The hook skips reduced motion, but never leave content hidden if it changes mid-session. */
+  [data-reveal-state="hidden"] {
+    opacity: 1 !important;
   }
   /* A still bar instead of a sweeping one; the step labels carry the progress. */
   .animate-indeterminate {

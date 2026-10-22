@@ -39,7 +39,7 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="stagger grid gap-6 lg:grid-cols-3">
               <Card title="Applications by status">
                 <BarList items={perStatus.map((s) => ({ key: s.status, label: APPLICATION_STATUSES[s.status].label, value: s.count }))} total={Math.max(1, m.applications)} />
               </Card>

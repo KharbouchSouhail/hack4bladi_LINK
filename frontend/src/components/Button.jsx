@@ -18,9 +18,10 @@ const SIZES = {
   xs: "h-8 px-2.5 text-xs",
 };
 
-// Shared so router links can look like buttons. Pressing nudges the button down 1px for immediate feedback.
+// Shared so router links can look like buttons. Pressing nudges the button down 1px and shrinks it slightly
+// for immediate feedback.
 export function buttonClasses(variant = "primary", className = "", size = "md") {
-  return `inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-semibold whitespace-nowrap transition duration-[180ms] ease-standard active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 disabled:translate-y-0 disabled:cursor-not-allowed disabled:shadow-none disabled:opacity-60 ${SIZES[size]} ${VARIANTS[variant]} ${className}`;
+  return `inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-semibold whitespace-nowrap transition duration-[180ms] ease-standard active:translate-y-px active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed disabled:shadow-none disabled:opacity-60 ${SIZES[size]} ${VARIANTS[variant]} ${className}`;
 }
 
 // `loading` shows a spinner and disables the button, so a request can't be submitted twice.

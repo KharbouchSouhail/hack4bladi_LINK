@@ -4,6 +4,7 @@ import { Bell, ChevronDown, FlaskConical, LogOut, Menu, Settings, X } from "luci
 import { getSession, logout } from "../auth/auth.js";
 import { LogoOnLight } from "../components/Logo.jsx";
 import { useQuery } from "../hooks/useQuery.js";
+import { useScrollReveal } from "../hooks/useScrollReveal.js";
 import { formatRelative, initials } from "../lib/format.js";
 import { getNotifications, markNotificationsRead } from "../services/core.js";
 
@@ -135,14 +136,14 @@ function SidebarNav({ sections, onNavigate }) {
                   className={({ isActive }) =>
                     `relative flex items-center gap-2.5 rounded-control px-3 py-2 text-[13px] font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent-500 ${
                       isActive
-                        ? "bg-accent-50 text-accent-600 before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r-full before:bg-accent-500"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-accent-50 text-accent-600 before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:animate-indicator before:rounded-r-full before:bg-accent-500"
+                        : "group text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon aria-hidden="true" size={17} strokeWidth={1.8} className={isActive ? "text-accent-500" : "text-gray-500"} />
+                      <Icon aria-hidden="true" size={17} strokeWidth={1.8} className={`transition duration-200 ease-standard ${isActive ? "text-accent-500" : "text-gray-500 group-hover:translate-x-0.5 group-hover:text-gray-700"}`} />
                       {label}
                     </>
                   )}
@@ -161,6 +162,8 @@ export default function DashboardLayout({ sections, roleLabel, settingsPath, top
   const session = getSession();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mainRef = useRef(null);
+  useScrollReveal(mainRef);
   const items = sections.flatMap((s) => s.items);
   const current = items.filter((i) => pathname.startsWith(i.to)).sort((a, b) => b.to.length - a.to.length)[0];
 
@@ -214,7 +217,8 @@ export default function DashboardLayout({ sections, roleLabel, settingsPath, top
           <Notifications />
           <ProfileMenu session={session} settingsPath={settingsPath} roleLabel={roleLabel} />
         </header>
-        <main className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 lg:py-8">
+        {/* Clipped sideways so content sliding in from the edge never adds a horizontal scrollbar. */}
+        <main ref={mainRef} className="mx-auto w-full max-w-[1280px] overflow-x-clip px-4 py-6 sm:px-6 lg:py-8">
           {/* Keyed by path so each page fades up as it opens; it never delays the content. */}
           <div key={pathname} className="animate-enter">
             <Outlet />
